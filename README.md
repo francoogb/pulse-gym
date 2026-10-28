@@ -1,39 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<div align="center">
 
-## Getting Started
+<img src="img/bulldog-logo.png" width="120" alt="Logo de Pulse" />
 
-First, run the development server:
+# Pulse
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Tu espacio fitness: entrena, registra tu nutrición y mira tu progreso.**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Next.js · React · SQLite · PWA · Claude Code
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Pulse es una app personal para llevar el gimnasio y la alimentación en un solo lugar. Se usa desde el PC y el celular, y se puede instalar como app.
 
-## Learn More
+## Funciones
 
-To learn more about Next.js, take a look at the following resources:
+- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso.
+- **Sesión de entrenamiento**: registra las repeticiones de cada serie y el peso real.
+- **Nutrición**: registro manual de comidas y macronutrientes, o estimación desde una foto con Claude Code.
+- **Progreso**: gráficos de proteína semanal, 1RM estimado por ejercicio y peso con tendencia.
+- **Descanso y hábitos**: sueño, agua, racha de días de gimnasio y calendario.
+- **Celular y avisos**: se instala como PWA y envía recordatorios de entrenamiento, sueño y cena.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Capturas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Inicio | Entrenamiento | Nutrición |
+| --- | --- | --- |
+| ![Inicio](img/movil-inicio.png) | ![Entrenamiento](img/movil-entrenamiento.png) | ![Nutrición](img/movil-nutricion.png) |
 
-## Deploy on Vercel
+| Progreso | Calendario |
+| --- | --- |
+| ![Progreso](img/movil-progreso.png) | ![Calendario](img/movil-calendario.png) |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+![Inicio en escritorio](img/escritorio-inicio.png)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Inicio rápido
+
+1. Instala las dependencias: `npm install`.
+2. Crea `.env.local` a partir de `.env.example` y completa los valores (ver la sección de seguridad).
+3. Desarrollo: `npm run dev` y abre [http://localhost:3000](http://localhost:3000).
+4. Producción (la que se usa con el celular): `npm run produccion`, que compila y arranca en el puerto 4317.
 
 ## Seguridad de acceso
 
@@ -141,19 +146,3 @@ La app no llama a la API de Anthropic directamente. Usa Claude Code de la misma 
 - Depende de que el PC esté encendido y con Claude Code autenticado.
 - Si la imagen no es comida, el modelo puede devolver valores fuera de rango, y la app lo rechaza.
 - Cada análisis tarda entre 10 y 60 segundos. Si la conexión se corta en ese tiempo, la petición falla.
-
-## Capturas
-
-Vista en celular:
-
-| Inicio | Entrenamiento | Nutrición |
-| --- | --- | --- |
-| ![Inicio](img/movil-inicio.png) | ![Entrenamiento](img/movil-entrenamiento.png) | ![Nutrición](img/movil-nutricion.png) |
-
-| Progreso | Calendario |
-| --- | --- |
-| ![Progreso](img/movil-progreso.png) | ![Calendario](img/movil-calendario.png) |
-
-Vista en escritorio:
-
-![Inicio en escritorio](img/escritorio-inicio.png)
