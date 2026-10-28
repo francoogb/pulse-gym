@@ -141,3 +141,19 @@ La app no llama a la API de Anthropic directamente. Usa Claude Code de la misma 
 - Depende de que el PC esté encendido y con Claude Code autenticado.
 - Si la imagen no es comida, el modelo puede devolver valores fuera de rango, y la app lo rechaza.
 - Cada análisis tarda entre 10 y 60 segundos. Si la conexión se corta en ese tiempo, la petición falla.
+
+## Capturas
+
+Vista en celular:
+
+| Inicio | Entrenamiento | Nutrición |
+| --- | --- | --- |
+| ![Inicio](img/movil-inicio.png) | ![Entrenamiento](img/movil-entrenamiento.png) | ![Nutrición](img/movil-nutricion.png) |
+
+| Progreso | Calendario |
+| --- | --- |
+| ![Progreso](img/movil-progreso.png) | ![Calendario](img/movil-calendario.png) |
+
+Vista en escritorio:
+
+![Inicio en escritorio](img/escritorio-inicio.png)
