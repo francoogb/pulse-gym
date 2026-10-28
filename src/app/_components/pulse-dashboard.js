@@ -1009,7 +1009,7 @@ export default function PulseDashboard({ view = "today" }) {
         </div>
       </main>
 
-      <input ref={photoInputRef} className="photo-file-input" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={analyzeMealPhoto} aria-label="Selecciona una foto de comida" />
+      <input ref={photoInputRef} className="photo-file-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={analyzeMealPhoto} aria-label="Selecciona una foto de comida" />
       <nav className="bottom-nav" aria-label="Navegación móvil">
         <Link className={view === "calendar" ? "active" : ""} href="/calendario"><Clock3 size={19} /><span>Calendario</span></Link>
         <Link className={view === "training" ? "active" : ""} href="/entrenamiento"><Dumbbell size={19} /><span>Entrenar</span></Link>
@@ -1107,6 +1107,13 @@ export default function PulseDashboard({ view = "today" }) {
         </div>
       )}
 
+      {photoBusy && (
+        <div className="photo-loading" role="status" aria-live="polite">
+          <span className="photo-spinner" aria-hidden="true" />
+          <strong>Analizando tu comida…</strong>
+          <small>Puede tardar hasta un minuto. No cierres la app.</small>
+        </div>
+      )}
       {toast && <div className="toast" role="status"><span><Check size={16} /></span>{toast}</div>}
       {routineBuilderOpen && <RoutineBuilder key={editingRoutine?.id ?? "new"} initialRoutine={editingRoutine} onClose={() => { setRoutineBuilderOpen(false); setEditingRoutine(null); }} onSaved={(routine) => {
         setRoutines((current) => editingRoutine ? current.map((item) => item.id === routine.id ? routine : item) : [routine, ...current]);

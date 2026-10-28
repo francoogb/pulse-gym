@@ -51,3 +51,9 @@ next-env.d.ts
 
 # Notas personales (no se publican)
 /pendientes.md
+
+# Log del servidor que arranca solo al iniciar sesión
+/pulse-servidor.log
+
+# Documentación personal (no se publica)
+/docs/

@@ -119,7 +119,7 @@ export async function POST(request) {
       "--tools", "Read",
       "--disallowedTools", "mcp__*",
       "--restricted",
-      "--max-turns", "1",
+      "--max-turns", "4",
       "--no-session-persistence",
     ], {
       cwd: uploadsDirectory,
@@ -131,6 +131,7 @@ export async function POST(request) {
 
     return Response.json({ meal: parseClaudeMeal(stdout) });
   } catch (error) {
+    console.error("[foto] error:", error.code ?? "", error.message, String(error.stderr ?? "").slice(0, 500), String(error.stdout ?? "").slice(0, 500));
     if (error.code === "ENOENT") {
       return Response.json({ error: "No encuentro Claude Code CLI. Instálalo y autentícalo en este equipo." }, { status: 503 });
     }

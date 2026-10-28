@@ -7,7 +7,7 @@
     "build": "next build && serwist build",
     "start": "next start",
     "lint": "eslint",
-    "produccion": "npm run build && next start -p 3003",
+    "produccion": "npm run build && next start -p 4317",
     "avisos": "node scripts/avisos.mjs",
     "avisos:simular": "node scripts/avisos.mjs --simular"
   },

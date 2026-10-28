@@ -55,8 +55,17 @@ export function proxy(request) {
   if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {
     const origin = request.headers.get("origin");
     if (origin) {
+      // Acepta el host local y la dirección pública de Tailscale (PULSE_ORIGEN_PUBLICO en .env.local).
+      const hostsPermitidos = new Set([request.nextUrl.host]);
+      if (process.env.PULSE_ORIGEN_PUBLICO) {
+        try {
+          hostsPermitidos.add(new URL(process.env.PULSE_ORIGEN_PUBLICO).host);
+        } catch {
+          // Si la variable no es una URL válida, solo queda permitido el host local.
+        }
+      }
       try {
-        if (new URL(origin).host !== request.nextUrl.host) {
+        if (!hostsPermitidos.has(new URL(origin).host)) {
           return new NextResponse("Origen no permitido.", { status: 403 });
         }
       } catch {
