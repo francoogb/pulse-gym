@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Bulldog de Pulse</title>
+  <rect width="512" height="512" rx="112" fill="#f8f7f2"/>
+  <circle cx="256" cy="248" r="184" fill="#167c6d"/>
+  <path d="M154 188c-18-45-61-56-78-22-18 37 8 82 58 82Z" fill="#fff"/>
+  <path d="M358 188c18-45 61-56 78-22 18 37-8 82-58 82Z" fill="#fff"/>
+  <path d="M126 245c0-87 52-135 130-135s130 48 130 135v73c0 89-54 143-130 143s-130-54-130-143Z" fill="#fff"/>
+  <path d="M100 177c15-17 35-7 43 15l-12 35c-25-5-40-31-31-50Z" fill="#0d5f56"/>
+  <path d="M412 177c-15-17-35-7-43 15l12 35c25-5 40-31 31-50Z" fill="#0d5f56"/>
+  <path d="M184 185c16-12 32-16 48-12m96 12c-16-12-32-16-48-12m-24-45v41" fill="none" stroke="#dbe4df" stroke-linecap="round" stroke-width="12"/>
+  <path d="M164 278c0-33 23-58 53-58 17 0 30 7 39 19 9-12 22-19 39-19 30 0 53 25 53 58 0 18-7 34-20 45 4 10 6 21 6 33 0 49-34 84-78 84s-78-35-78-84c0-12 2-23 6-33-13-11-20-27-20-45Z" fill="#e9eeea"/>
+  <circle cx="198" cy="266" r="14" fill="#102a28"/>
+  <circle cx="314" cy="266" r="14" fill="#102a28"/>
+  <path d="M215 315c0-21 18-36 41-36s41 15 41 36c0 18-15 29-41 29s-41-11-41-29Z" fill="#102a28"/>
+  <path d="M256 344v31m-41-4c13 14 27 20 41 20s28-6 41-20" fill="none" stroke="#102a28" stroke-linecap="round" stroke-width="12"/>
+  <path d="M158 390c28 27 61 41 98 41s70-14 98-41" fill="none" stroke="#ff715f" stroke-linecap="round" stroke-width="22"/>
+  <circle cx="369" cy="116" r="18" fill="#ff715f"/>
+</svg>

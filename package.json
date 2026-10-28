@@ -1,0 +1,34 @@
+{
+  "name": "mi-gym",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && serwist build",
+    "start": "next start",
+    "lint": "eslint",
+    "produccion": "npm run build && next start -p 3003",
+    "avisos": "node scripts/avisos.mjs",
+    "avisos:simular": "node scripts/avisos.mjs --simular"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "lucide-react": "^1.62.0",
+    "next": "16.4.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "recharts": "^3.10.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@serwist/cli": "^9.5.13",
+    "@serwist/next": "^9.5.13",
+    "@tailwindcss/turbopack": "^4",
+    "concurrently": "^10.0.6",
+    "esbuild": "^0.28.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "serwist": "^9.5.13",
+    "tailwindcss": "^4"
+  }
+}
