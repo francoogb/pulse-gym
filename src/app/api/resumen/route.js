@@ -36,7 +36,7 @@ export async function GET(request) {
   `).get(fecha);
 
   const ejercicios = database.prepare(`
-    SELECT ejercicio, series, repeticiones, peso FROM series WHERE fecha = ? AND sesion = ? ORDER BY id
+    SELECT ejercicio, series, repeticiones, peso, peso_base, peso_extra, notas FROM series WHERE fecha = ? AND sesion = ? ORDER BY id
   `).all(fecha, SESSION_ID);
 
   const habito = database.prepare("SELECT vasos FROM habitos WHERE fecha = ?").get(fecha);
@@ -53,7 +53,14 @@ export async function GET(request) {
     },
     entrenamiento: {
       completados: ejercicios.map((ejercicio) => ejercicio.ejercicio),
-      detalles: Object.fromEntries(ejercicios.map((ejercicio) => [ejercicio.ejercicio, { sets: ejercicio.series, reps: ejercicio.repeticiones, weight: ejercicio.peso }]))
+      detalles: Object.fromEntries(ejercicios.map((ejercicio) => [ejercicio.ejercicio, {
+        sets: ejercicio.series,
+        reps: ejercicio.repeticiones,
+        weight: ejercicio.peso,
+        baseWeight: ejercicio.peso_base,
+        extraWeight: ejercicio.peso_extra,
+        notes: ejercicio.notas,
+      }]))
     },
     vasos: habito?.vasos ?? 0,
     sueno: sueno?.horas ?? null,

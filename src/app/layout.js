@@ -34,7 +34,7 @@ export const metadata = {
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Pulse" },
 };
 
-export const viewport = { themeColor: "#167c6d" };
+export const viewport = { themeColor: "#167c6d", viewportFit: "cover" };
 
 export default function RootLayout({ children }) {
   return (

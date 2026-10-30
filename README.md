@@ -14,22 +14,29 @@ Pulse es una app personal para llevar el gimnasio y la alimentación en un solo 
 
 ## Funciones
 
-- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso.
-- **Sesión de entrenamiento**: registra las repeticiones de cada serie y el peso real.
-- **Nutrición**: registro manual de comidas y macronutrientes, o estimación desde una foto con Claude Code.
+- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso. Ciclo de rutinas: si faltas un día, la siguiente sesión sigue el orden. Añade ejercicios a mano o con IA (texto o foto).
+- **Modo guiado**: un ejercicio a la vez, cronómetro de descanso, peso base + extra, notas por ejercicio y la última vez con una sugerencia de peso.
+- **Captura de comida (+)**: tomar foto o elegir de la galería, describir con IA, escanear código de barras (cámara o número) y cargar favoritos.
+- **Nutrición**: registro manual de comidas y macronutrientes, con estimación desde foto o descripción usando Claude Code.
+- **Coach**: análisis de los últimos 30 días con Claude (indicadores de entrenamiento, nutrición, peso, sueño y agua).
 - **Progreso**: gráficos de proteína semanal, 1RM estimado por ejercicio y peso con tendencia.
 - **Descanso y hábitos**: sueño, agua, racha de días de gimnasio y calendario.
 - **Celular y avisos**: se instala como PWA y envía recordatorios de entrenamiento, sueño y cena.
+- **Arquitectura**: diagramas de cómo se conecta todo en [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ## Capturas
 
 | Inicio | Entrenamiento | Nutrición |
 | --- | --- | --- |
-| ![Inicio](img/movil-inicio.png) | ![Entrenamiento](img/movil-entrenamiento.png) | ![Nutrición](img/movil-nutricion.png) |
+| ![Inicio](img/movil-inicio.png) | ![Entrenamiento](img/movil-entrenamiento.png) | ![Captura de comida](img/movil-captura.png) |
 
-| Progreso | Calendario |
-| --- | --- |
-| ![Progreso](img/movil-progreso.png) | ![Calendario](img/movil-calendario.png) |
+| Coach | Nutrición | Progreso |
+| --- | --- | --- |
+| ![Coach](img/movil-coach.png) | ![Nutrición](img/movil-nutricion.png) | ![Progreso](img/movil-progreso.png) |
+
+| Calendario |
+| --- |
+| ![Calendario](img/movil-calendario.png) |
 
 ![Inicio en escritorio](img/escritorio-inicio.png)
 
