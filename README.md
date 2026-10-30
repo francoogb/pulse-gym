@@ -40,6 +40,42 @@ Pulse es una app personal para llevar el gimnasio y la alimentación en un solo 
 
 ![Inicio en escritorio](img/escritorio-inicio.png)
 
+## Arquitectura
+
+Cómo se conectan las piezas de Pulse. Los diagramas completos (flujos, base de datos y pantallas) están en [ARQUITECTURA.md](ARQUITECTURA.md).
+
+```mermaid
+flowchart LR
+    subgraph Dispositivos
+        CEL["Celular<br/>(app instalada / Chrome)"]
+        PC["Navegador del PC"]
+    end
+
+    TS["Tailscale Serve<br/>(HTTPS privado)"]
+
+    subgraph Servidor["Servidor Next.js 16 · puerto 4317"]
+        PROXY["proxy.js<br/>cookie firmada o Basic"]
+        PAGINAS["Páginas App Router<br/>pulse-dashboard.js"]
+        API["API Route Handlers<br/>src/app/api/*"]
+        SW["sw.js<br/>(Serwist)"]
+    end
+
+    DB[("gym.db<br/>SQLite")]
+    CLAUDE["Claude Code CLI<br/>(modelo de la config)"]
+    OFF["Open Food Facts<br/>(códigos de barras)"]
+    PUSHSRV["Servicio push<br/>del navegador"]
+    TAREA["Programador de tareas<br/>scripts/avisos.mjs"]
+
+    CEL -->|HTTPS| TS --> PROXY
+    PC -->|localhost:4317| PROXY
+    PROXY --> PAGINAS --> API
+    API -->|lee y escribe| DB
+    API -->|fotos, describir,<br/>coach, ejercicio IA| CLAUDE
+    API -->|código de barras| OFF
+    TAREA -->|lee registros| DB
+    TAREA -->|web-push con VAPID| PUSHSRV --> SW --> CEL
+```
+
 ## Inicio rápido
 
 1. Instala las dependencias: `npm install`.
