@@ -57,3 +57,6 @@ next-env.d.ts
 
 # Documentación personal (no se publica)
 /docs/
+
+# Registro del envío de avisos push
+avisos.log

@@ -26,12 +26,14 @@ export async function GET(request) {
 
 export async function POST(request) {
   const body = await leerJson(request);
+  // La estatura es opcional: si no se envía, se conserva la que ya estaba guardada.
+  const conEstatura = body?.estatura !== undefined && body?.estatura !== null;
   if (
     !body || !esFechaValida(body.fecha) ||
     !esNumeroEnRango(body.kg, 20, 500) ||
-    !esNumeroEnRango(body.estatura, 100, 250)
+    (conEstatura && !esNumeroEnRango(body.estatura, 100, 250))
   ) {
-    return Response.json({ error: "Ingresa un peso entre 20 y 500 kg y una estatura entre 100 y 250 cm." }, { status: 400 });
+    return Response.json({ error: "Ingresa un peso entre 20 y 500 kg y, si la indicas, una estatura entre 100 y 250 cm." }, { status: 400 });
   }
 
   const guardarMedidas = database.transaction(() => {
@@ -39,12 +41,14 @@ export async function POST(request) {
       INSERT INTO peso_corporal (fecha, kg) VALUES (?, ?)
       ON CONFLICT(fecha) DO UPDATE SET kg = excluded.kg
     `).run(body.fecha, body.kg);
-    database.prepare(`
-      INSERT INTO perfil (id, estatura_cm) VALUES (1, ?)
-      ON CONFLICT(id) DO UPDATE SET estatura_cm = excluded.estatura_cm
-    `).run(body.estatura);
+    if (conEstatura) {
+      database.prepare(`
+        INSERT INTO perfil (id, estatura_cm) VALUES (1, ?)
+        ON CONFLICT(id) DO UPDATE SET estatura_cm = excluded.estatura_cm
+      `).run(body.estatura);
+    }
   });
   guardarMedidas();
 
-  return Response.json({ ok: true, fecha: body.fecha, kg: body.kg, estatura: body.estatura });
+  return Response.json({ ok: true, fecha: body.fecha, kg: body.kg, estatura: conEstatura ? body.estatura : null });
 }

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="img/bulldog-logo.png" width="120" alt="Logo de Pulse" />
+<img src="img/bulldog-logo.png" width="120" alt="Logo de BullTrack" />
 
-# Pulse
+# BullTrack
 
 **Tu espacio fitness: entrena, registra tu nutrición y mira tu progreso.**
 
@@ -10,11 +10,11 @@ Next.js · React · SQLite · PWA · Claude Code
 
 </div>
 
-Pulse es una app personal para llevar el gimnasio y la alimentación en un solo lugar. Se usa desde el PC y el celular, y se puede instalar como app.
+BullTrack es una app personal para llevar el gimnasio y la alimentación en un solo lugar. Se usa desde el PC y el celular, y se puede instalar como app.
 
 ## Funciones
 
-- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso. Ciclo de rutinas: si faltas un día, la siguiente sesión sigue el orden. Añade ejercicios a mano o con IA (texto o foto).
+- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso. Cada día muestra la rutina de ese día de la semana. Añade ejercicios a mano o con IA (texto o foto).
 - **Modo guiado**: un ejercicio a la vez, cronómetro de descanso, peso base + extra, notas por ejercicio y la última vez con una sugerencia de peso.
 - **Captura de comida (+)**: tomar foto o elegir de la galería, describir con IA, escanear código de barras (cámara o número) y cargar favoritos.
 - **Nutrición**: registro manual de comidas y macronutrientes, con estimación desde foto o descripción usando Claude Code.
@@ -42,7 +42,7 @@ Pulse es una app personal para llevar el gimnasio y la alimentación en un solo 
 
 ## Arquitectura
 
-Cómo se conectan las piezas de Pulse. Los diagramas completos (flujos, base de datos y pantallas) están en [ARQUITECTURA.md](ARQUITECTURA.md).
+Cómo se conectan las piezas de BullTrack. Los diagramas completos (flujos, base de datos y pantallas) están en [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ```mermaid
 flowchart LR
@@ -103,7 +103,7 @@ Nota de privacidad: Claude CLI se ejecuta en este equipo, pero envía la imagen 
 
 Ejecútalos en PowerShell, dentro de la carpeta `mi-gym`.
 
-Encender la app (compila y arranca en el puerto 3003, el que publica Tailscale):
+Encender la app (compila y arranca en el puerto 4317, el que publica Tailscale):
 
 ```powershell
 npm run produccion

@@ -22,7 +22,7 @@ serwist.addEventListeners();
 
 // Avisos enviados desde el servidor (ver scripts/avisos.mjs).
 self.addEventListener("push", (event) => {
-  let aviso = { titulo: "Pulse", cuerpo: "Tienes un recordatorio.", url: "/" };
+  let aviso = { titulo: "BullTrack", cuerpo: "Tienes un recordatorio.", url: "/" };
   try {
     aviso = { ...aviso, ...event.data.json() };
   } catch {

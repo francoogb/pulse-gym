@@ -1543,8 +1543,8 @@ select:focus-visible {
   }
 
   .mobile-header .brand-mark {
-    width: 34px;
-    height: 34px;
+    width: 50px;
+    height: 50px;
   }
 
   .mobile-header .icon-button {
@@ -3320,6 +3320,554 @@ html[data-theme="dark"] .bottom-nav a.bottom-camera:hover {
   justify-content: center;
 }
 
+.muscle-gain-values small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.muscle-gain-adjust {
+  margin: 14px 0 6px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.muscle-gain-tips {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+  padding-left: 18px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+/* Hora de dormir / despertar con botón "Ahora" */
+.sleep-time-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.sleep-now {
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 14px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sleep-now:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Pantalla de notificaciones */
+.notif-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+}
+
+.notif-layout > *,
+.notif-main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.notif-item,
+.notif-prefs {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.notif-body p,
+.notif-body strong {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 900px) {
+  .notif-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+.notif-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.notif-tabs button {
+  min-height: 40px;
+  padding: 0 16px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notif-tabs button.active {
+  background: var(--teal);
+  color: #fff;
+}
+
+.notif-quiet-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.notif-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notif-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.notif-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--teal);
+}
+
+.notif-body {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notif-title small {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.notif-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.notif-action {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--teal);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--teal);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.notif-empty {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  margin-top: 16px;
+  padding: 36px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.notif-prefs {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.notif-prefs h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.notif-prefs > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.notif-pref-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}
+
+.notif-pref-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.notif-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: #b9c4bd;
+  cursor: pointer;
+}
+
+.notif-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.notif-switch[aria-checked="true"] {
+  background: var(--teal);
+}
+
+.notif-switch[aria-checked="true"] i {
+  transform: translateX(20px);
+}
+
+/* Resumen de horas de sueño calculadas en el modal */
+.sleep-calc {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+.sleep-calc strong {
+  color: var(--teal);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Campo "Reps por serie": botón que abre el modal de repeticiones */
+.reps-field {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reps-trigger {
+  display: flex;
+  min-height: 44px;
+  padding: 0 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reps-trigger:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.reps-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.reps-grid label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.reps-grid input {
+  height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  font-size: 18px;
+  text-align: center;
+}
+
+.reps-same {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--teal);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reps-error {
+  margin: 10px 0 0;
+  color: #b4442e;
+  font-weight: 600;
+}
+
+
+/* Descanso a pantalla completa entre series */
+.rest-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  gap: 28px;
+  align-content: center;
+  justify-items: center;
+  padding: 32px 20px;
+  overflow-y: auto;
+  background: linear-gradient(-45deg, #0b2e2a, #167c6d, #0f4f47, #1d8f7c);
+  background-size: 300% 300%;
+  color: #fff;
+  text-align: center;
+  animation: rest-gradient 12s ease infinite, fade-in 200ms ease-out;
+}
+
+@keyframes rest-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.rest-phrase {
+  max-width: 560px;
+  margin: 0;
+  font-size: clamp(22px, 5vw, 34px);
+  font-weight: 700;
+  line-height: 1.25;
+  animation: rest-phrase-in 600ms ease-out;
+}
+
+@keyframes rest-phrase-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.rest-ring {
+  position: relative;
+  display: grid;
+  width: min(70vw, 300px);
+  aspect-ratio: 1;
+  place-items: center;
+}
+
+.rest-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.rest-ring circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.rest-ring-track {
+  stroke: rgba(255, 255, 255, 0.18);
+}
+
+.rest-ring-progress {
+  stroke: #fff;
+  stroke-dasharray: 565.49;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+  animation: rest-glow 2s ease-in-out infinite;
+}
+
+@keyframes rest-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+  50% { filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.75)); }
+}
+
+.rest-ring strong {
+  font-size: clamp(56px, 16vw, 84px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.rest-next,
+.rest-series-label {
+  margin: 0;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.rest-stopwatch {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.rest-stopwatch span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.rest-stopwatch strong {
+  font-size: clamp(64px, 18vw, 110px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.rest-screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.rest-screen-secondary,
+.rest-screen-button {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rest-screen-button {
+  min-height: 60px;
+  padding: 0 40px;
+  border-color: #fff;
+  background: #fff;
+  color: #0b2e2a;
+  font-size: 22px;
+  animation: rest-pulse 1.4s ease-in-out infinite;
+}
+
+.rest-ready {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.rest-ready-title {
+  margin: 0;
+  font-size: clamp(44px, 12vw, 80px);
+  font-weight: 800;
+  line-height: 1.05;
+  animation: rest-pop 500ms ease-out;
+}
+
+.rest-ready-text {
+  margin: 0;
+  font-size: clamp(22px, 5vw, 30px);
+  font-weight: 700;
+}
+
+.rest-ready-sub {
+  margin: 0 0 12px;
+  opacity: 0.85;
+}
+
+@keyframes rest-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes rest-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rest-screen,
+  .rest-phrase,
+  .rest-ring-progress,
+  .rest-screen-button,
+  .rest-ready-title {
+    animation: none;
+  }
+}
+
 /* Quitar la marca de un ejercicio solo en pantalla, para probar el descanso */
 .guided-unmark {
   width: 100%;
@@ -3533,26 +4081,6 @@ html[data-theme="dark"] .bottom-nav a.bottom-camera:hover {
 
 .guided-suggestion.up {
   color: var(--teal) !important;
-}
-
-/* Selector de la rutina de hoy (orden del ciclo) */
-.cycle-picker {
-  display: grid;
-  gap: 6px;
-  margin: 12px 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.cycle-picker select {
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface-soft);
-  color: var(--ink);
-  font: inherit;
 }
 
 /* Botón "Crear rutina": color de la app y el icono centrado */

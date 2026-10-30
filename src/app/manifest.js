@@ -1,8 +1,8 @@
 export default function manifest() {
   return {
     id: "/",
-    name: "Pulse — tu espacio fitness",
-    short_name: "Pulse",
+    name: "BullTrack — tu espacio fitness",
+    short_name: "BullTrack",
     description: "Entrenamiento, nutrición y bienestar en un solo lugar.",
     start_url: "/",
     scope: "/",

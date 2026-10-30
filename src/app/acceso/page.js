@@ -37,8 +37,9 @@ export default function AccesoPage() {
 
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24, background: "#f3f4ee", color: "#18322f", fontFamily: "system-ui, sans-serif" }}>
-      <form onSubmit={iniciarSesion} style={{ width: "100%", maxWidth: 360, display: "grid", gap: 14, padding: 28, borderRadius: 22, background: "#fff", boxShadow: "0 12px 35px rgba(30,57,51,.08)" }}>
-        <p style={{ margin: 0, color: "#167c6d", fontWeight: 700, letterSpacing: ".08em" }}>PULSE</p>
+      {/* method="post": si el JavaScript no carga, la clave no viaja en la URL. */}
+      <form method="post" onSubmit={iniciarSesion} style={{ width: "100%", maxWidth: 360, display: "grid", gap: 14, padding: 28, borderRadius: 22, background: "#fff", boxShadow: "0 12px 35px rgba(30,57,51,.08)" }}>
+        <p style={{ margin: 0, color: "#167c6d", fontWeight: 700, letterSpacing: ".08em" }}>BULLTRACK</p>
         <h1 style={{ margin: 0, fontSize: 26 }}>Inicia sesión</h1>
 
         <label style={{ display: "grid", gap: 6, fontWeight: 600 }}>

@@ -154,6 +154,15 @@ if (!mealColumns.some((column) => column.name === "unidad")) {
   database.exec("ALTER TABLE comidas ADD COLUMN unidad TEXT NOT NULL DEFAULT 'porción'");
 }
 
+// Horario de sueño ("HH:MM"); las horas se calculan a partir de estas dos columnas.
+const sleepColumns = database.prepare("PRAGMA table_info(sueno)").all();
+if (!sleepColumns.some((column) => column.name === "hora_dormir")) {
+  database.exec("ALTER TABLE sueno ADD COLUMN hora_dormir TEXT");
+}
+if (!sleepColumns.some((column) => column.name === "hora_despertar")) {
+  database.exec("ALTER TABLE sueno ADD COLUMN hora_despertar TEXT");
+}
+
 // Migración compatible con bases existentes: cada ejercicio puede pertenecer a un día concreto.
 const routineExerciseColumns = database.prepare("PRAGMA table_info(rutina_ejercicios)").all();
 if (!routineExerciseColumns.some((column) => column.name === "dia")) {

@@ -172,7 +172,7 @@ La barra inferior del celular y la barra lateral del PC llevan a las pantallas p
 ```mermaid
 flowchart TD
     INICIO["/ Inicio<br/>tira de la semana"]
-    ENTRENAR["/entrenamiento<br/>Empezar rutina · ciclo"]
+    ENTRENAR["/entrenamiento<br/>Empezar rutina"]
     NUTRICION["/nutricion"]
     PROGRESO["/progreso"]
     CALENDARIO["/calendario"]
@@ -205,8 +205,7 @@ stateDiagram-v2
     Lista --> Ejercicio: Volver al modo guiado
     Ejercicio --> Final: último ejercicio completado
     Final --> Guardado: Finalizar sesión
-    Guardado --> Ciclo: avanza la próxima rutina
-    Ciclo --> [*]
+    Guardado --> [*]
 ```
 
 ## 7. Dónde vive cada cosa

@@ -29,7 +29,7 @@
 
 ## Análisis de fotos
 - Route `/api/foto`: guarda la imagen en `uploads/` y ejecuta `claude -p` con `child_process.execFile`.
-- Claude Code corre con `--restricted`, `--tools Read`, modo plan y un turno; Node valida el JSON. La imagen temporal se borra al terminar, y el usuario revisa la estimación antes de guardarla en SQLite.
+- Claude Code corre con `--restricted`, `--tools Read`, modo plan y 4 turnos; Node valida el JSON. La imagen temporal se borra al terminar, y el usuario revisa la estimación antes de guardarla en SQLite.
 - Permisos mínimos: solo lectura (sin escritura ni shell), cwd acotado a `uploads/`, nunca `--dangerously-skip-permissions`.
 - Requiere Claude Code instalado y logueado en la PC.
 - Runtime `nodejs` obligatorio en esa route.

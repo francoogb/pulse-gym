@@ -40,7 +40,7 @@ export async function GET(request) {
   `).all(fecha, SESSION_ID);
 
   const habito = database.prepare("SELECT vasos FROM habitos WHERE fecha = ?").get(fecha);
-  const sueno = database.prepare("SELECT horas FROM sueno WHERE fecha = ?").get(fecha);
+  const sueno = database.prepare("SELECT horas, hora_dormir, hora_despertar FROM sueno WHERE fecha = ?").get(fecha);
 
   return Response.json({
     fecha,
@@ -64,6 +64,7 @@ export async function GET(request) {
     },
     vasos: habito?.vasos ?? 0,
     sueno: sueno?.horas ?? null,
+    suenoHorario: sueno?.hora_dormir && sueno?.hora_despertar ? { dormir: sueno.hora_dormir, despertar: sueno.hora_despertar } : null,
   });
 }
 

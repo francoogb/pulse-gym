@@ -52,6 +52,9 @@ import {
 } from "recharts";
 import { exercises } from "@/lib/plan";
 import RoutineBuilder from "@/app/_components/routine-builder";
+import RepsField from "@/app/_components/reps-field";
+import SleepForm from "@/app/_components/sleep-form";
+import NotificationsFeed from "@/app/_components/notifications-feed";
 import MealForm from "@/app/_components/meal-form";
 import { sugerirProgresion } from "@/lib/progresion";
 
@@ -137,6 +140,25 @@ function urlBase64ToUint8Array(base64) {
   return Uint8Array.from(raw, (char) => char.charCodeAt(0));
 }
 
+// Frases que rotan en la pantalla de descanso entre series.
+const FRASES_DESCANSO = [
+  "Respira hondo. Esta serie ya es tuya.",
+  "Cada repetición cuenta, aunque pese.",
+  "Hidrátate: tu cuerpo lo está pidiendo.",
+  "Piensa en la última repetición, no en el cansancio.",
+  "Fuerza que se construye una serie a la vez.",
+  "Postura firme, mente tranquila.",
+  "Hoy das un paso más que ayer.",
+  "Lo difícil es lo que te hace crecer.",
+  "Tú puedes con esto y con más.",
+  "Concentración total: la siguiente serie es la mejor.",
+  "El descanso también es entrenamiento.",
+  "Constancia pura. Sigue así.",
+];
+
+// Segundos a m:ss para los cronómetros de la pantalla de descanso y de serie.
+const formatoTiempo = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, "0")}`;
+
 export default function PulseDashboard({ view = "today" }) {
   const [water, setWater] = useState(0);
   // "cargando" | "no-disponible" | "sin-servicio" | "bloqueado" | "inactivo" | "activo"
@@ -155,10 +177,16 @@ export default function PulseDashboard({ view = "today" }) {
   const [analizandoCoach, setAnalizandoCoach] = useState(false);
   const [coachError, setCoachError] = useState("");
   const [guiaIndex, setGuiaIndex] = useState(0);
-  const [siguienteRutinaId, setSiguienteRutinaId] = useState(null);
   const [ultimasSeries, setUltimasSeries] = useState({});
-  const [descanso, setDescanso] = useState(0);
+  // Descanso entre series: se guarda la hora de fin para que siga contando aunque el celular bloquee la pantalla.
+  const [descansoFin, setDescansoFin] = useState(0);
   const [descansoTotal, setDescansoTotal] = useState(0);
+  const [descansoListo, setDescansoListo] = useState(false);
+  // Hora en que empezó la serie actual (0 si no hay serie en curso) y duración de la última serie.
+  const [cronoInicio, setCronoInicio] = useState(0);
+  const [ultimaSerieSeg, setUltimaSerieSeg] = useState(0);
+  const [ahora, setAhora] = useState(0);
+  const [serieGuia, setSerieGuia] = useState(1);
   const photoInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [descripcion, setDescripcion] = useState("");
@@ -173,6 +201,8 @@ export default function PulseDashboard({ view = "today" }) {
   const [saving, setSaving] = useState(false);
   const [waterSaving, setWaterSaving] = useState(false);
   const [sleep, setSleep] = useState(null);
+  const [sleepSchedule, setSleepSchedule] = useState(null);
+  const [musculo, setMusculo] = useState(null);
   const [bodyWeight, setBodyWeight] = useState(null);
   const [bodyHeight, setBodyHeight] = useState(null);
   const [weightHistory, setWeightHistory] = useState([]);
@@ -190,14 +220,14 @@ export default function PulseDashboard({ view = "today" }) {
   const [ejercicioGrafico, setEjercicioGrafico] = useState(exercises[0].name);
 
   const goals = { calories: 2200, protein: bodyWeight ? Math.round(bodyWeight * 1.8) : 150, carbs: 220, fat: 70 };
-  const pageTitles = { today: "Haz que hoy cuente", calendar: "Tu calendario", training: "Entrenamiento", nutrition: "Nutrición", progress: "Tu progreso", capture: "Captura tu comida", describe: "Describir con IA", barcode: "Escanear código", coach: "Tu coach" };
-  const pageDescriptions = { today: "Tu cuerpo agradece cada pequeño esfuerzo.", calendar: "Revisa tu constancia y los registros de cada día.", training: "Organiza tus días de gimnasio y registra cada sesión.", nutrition: "Comidas y macros en un solo lugar.", progress: "Observa cómo cambian tu fuerza, descanso y peso.", capture: "Elige cómo quieres registrar lo que comiste.", describe: "Escribe lo que comiste y Claude estima sus calorías y macros.", barcode: "Lee el código de barras o escríbelo para cargar los valores del producto.", coach: "Claude revisa tus últimos 30 días y te dice cómo progresar." };
+  const pageTitles = { notifications: "Notificaciones", today: "Haz que hoy cuente", calendar: "Tu calendario", training: "Entrenamiento", nutrition: "Nutrición", progress: "Tu progreso", capture: "Captura tu comida", describe: "Describir con IA", barcode: "Escanear código", coach: "Tu coach" };
+  const pageDescriptions = { notifications: "Todo lo importante, sin distraerte.", today: "Tu cuerpo agradece cada pequeño esfuerzo.", calendar: "Revisa tu constancia y los registros de cada día.", training: "Organiza tus días de gimnasio y registra cada sesión.", nutrition: "Comidas y macros en un solo lugar.", progress: "Observa cómo cambian tu fuerza, descanso y peso.", capture: "Elige cómo quieres registrar lo que comiste.", describe: "Escribe lo que comiste y Claude estima sus calorías y macros.", barcode: "Lee el código de barras o escríbelo para cargar los valores del producto.", coach: "Claude revisa tus últimos 30 días y te dice cómo progresar." };
   const scheduledDay = getWeekDay(dateKey);
-  // Hoy se sigue el ciclo (próxima rutina guardada); en otros días se usa el calendario.
-  const esHoy = dateKey === getLocalDate();
-  const rutinaCiclo = esHoy && siguienteRutinaId ? routines.find((routine) => routine.id === siguienteRutinaId) ?? null : null;
-  const todayRoutine = rutinaCiclo ?? routines.find((routine) => routine.days.includes(scheduledDay)) ?? null;
-  const sessionDay = rutinaCiclo && !rutinaCiclo.days.includes(scheduledDay) ? rutinaCiclo.days[0] : scheduledDay;
+  // Hoy se sigue el ciclo (próxima rutina guardada); si ya se completó una hoy, se mantiene esa.
+  // En otros días se usa el calendario.
+  // Cada día muestra solo la rutina programada para ese día de la semana.
+  const todayRoutine = routines.find((routine) => routine.days.includes(scheduledDay)) ?? null;
+  const sessionDay = scheduledDay;
   const sessionExercises = todayRoutine?.exercises.filter((exercise) => exercise.day === sessionDay).map((exercise) => ({
     ...exercise,
     detail: `${exercise.sets} series · ${exercise.reps} reps${Number(exercise.weight) > 0 ? ` · ${exercise.weight} kg` : ""}`,
@@ -205,6 +235,82 @@ export default function PulseDashboard({ view = "today" }) {
   })) ?? [];
   const completedSessionNames = completed.filter((name) => sessionExercises.some((exercise) => exercise.name === name));
   const sessionWasSaved = workoutDone && sessionExercises.length > 0 && completedSessionNames.length === sessionExercises.length;
+
+  // Avisos de hoy, calculados con los datos que ya están en pantalla.
+  const esHoy = dateKey === getLocalDate();
+  const horaActual = new Date().getHours();
+  const avisos = [];
+  if (esHoy && todayRoutine && !sessionWasSaved) {
+    avisos.push({ id: "rutina", categoria: "entrenamiento", tipo: "rutinas", titulo: "Rutina de hoy", hora: "Ahora", texto: `${todayRoutine.name} · ${sessionExercises.length} ejercicios · ${todayRoutine.duration}`, accion: { texto: completedSessionNames.length ? "Continuar rutina" : "Empezar rutina", onClick: () => iniciarGuia() } });
+  }
+  if (esHoy && water < 8) {
+    avisos.push({ id: "agua", categoria: "nutricion", tipo: "nutricion", titulo: "Hora de hidratarte", hora: "Hoy", texto: `Te faltan ${8 - water} vasos para completar tu objetivo.`, accion: { texto: "Registrar vaso", onClick: () => addWater() } });
+  }
+  if (esHoy && meals.length === 0 && horaActual >= 14) {
+    avisos.push({ id: "comida", categoria: "nutricion", tipo: "nutricion", titulo: "Registra tu comida", hora: "Hoy", texto: "Aún no tienes comidas registradas hoy.", accion: { texto: "Ir a nutrición", href: "/nutricion" } });
+  }
+  if (esHoy && sleep === null) {
+    avisos.push({ id: "sueno", categoria: "progreso", tipo: "sueno", titulo: "¿Cuánto dormiste?", hora: "Hoy", texto: "Aún no registras tus horas de sueño.", accion: { texto: "Registrar sueño", onClick: () => setModal("sleep") } });
+  }
+  if (esHoy && weightHistory.at(-1)?.fecha !== dateKey) {
+    avisos.push({ id: "peso", categoria: "progreso", tipo: "logros", titulo: "Pésate hoy", hora: "Hoy", texto: "Registra tu peso para ver tu variación y tu plan.", accion: { texto: "Registrar peso", onClick: () => setModal("weight") } });
+  }
+  if (streak > 0 && sessionWasSaved) {
+    avisos.push({ id: "racha", categoria: "progreso", tipo: "logros", titulo: "Racha protegida", hora: "Hoy", texto: `Llevas ${streak} ${streak === 1 ? "día" : "días"} seguidos entrenando.` });
+  }
+
+  // Análisis de entrenamiento: cumplimiento de la semana, cambio de fuerza y recuperación.
+  const diasProgramados = weeklyPlan.filter((dia) => dia.active).length;
+  const diasEntrenados = semana.filter((dia) => dia.entrenó).length;
+  if (diasProgramados > 0) {
+    const cumplido = diasEntrenados >= diasProgramados;
+    avisos.push({ id: "analisis-semana", categoria: "entrenamiento", tipo: "rutinas", titulo: "Tu semana de entrenamiento", hora: "Esta semana", texto: cumplido ? `Cumpliste ${diasEntrenados} de ${diasProgramados} días programados. ¡Buen ritmo!` : `Llevas ${diasEntrenados} de ${diasProgramados} días programados. Te quedan ${diasProgramados - diasEntrenados} para cumplir la semana.` });
+  }
+
+  const cambiosFuerza = Object.entries(fuerza)
+    .filter(([, historial]) => historial.length >= 2)
+    .map(([ejercicio, historial]) => ({ ejercicio, diferencia: Math.round((historial.at(-1).rm - historial.at(-2).rm) * 10) / 10 }));
+  if (cambiosFuerza.length) {
+    const subieron = cambiosFuerza.filter((cambio) => cambio.diferencia > 0).sort((a, b) => b.diferencia - a.diferencia);
+    const bajaron = cambiosFuerza.filter((cambio) => cambio.diferencia < 0);
+    let texto = "";
+    if (subieron.length) texto += `Mejoraste en ${subieron.length} ${subieron.length === 1 ? "ejercicio" : "ejercicios"}; el que más subió fue ${subieron[0].ejercicio} (+${subieron[0].diferencia} kg de 1RM estimado). `;
+    if (bajaron.length) texto += `Bajó en ${bajaron.length}: revisa tu descanso y tu sueño. `;
+    if (!subieron.length && !bajaron.length) texto = "Tu fuerza se mantiene igual que en la sesión anterior.";
+    avisos.push({ id: "analisis-fuerza", categoria: "entrenamiento", tipo: "rutinas", titulo: "Cómo va tu fuerza", hora: "Últimas sesiones", texto: texto.trim() });
+  }
+
+  const horasSemana = semana.map((dia) => dia.sueno).filter((horas) => horas !== null);
+  if (horasSemana.length && horasSemana.reduce((suma, horas) => suma + horas, 0) / horasSemana.length < 7) {
+    const promedio = Math.round((horasSemana.reduce((suma, horas) => suma + horas, 0) / horasSemana.length) * 10) / 10;
+    avisos.push({ id: "analisis-recuperacion", categoria: "entrenamiento", tipo: "sueno", titulo: "Recuperación", hora: "Esta semana", texto: `Duermes ${promedio} h en promedio. Para ganar fuerza apunta a 7–9 h.` });
+  }
+
+  // Preferencias de avisos, guardadas en este navegador.
+  const [preferencias, setPreferencias] = useState({});
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      try {
+        setPreferencias(JSON.parse(window.localStorage.getItem("bulltrack-avisos") ?? "{}"));
+      } catch {
+        setPreferencias({});
+      }
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
+  const cambiarPreferencia = (id) => {
+    setPreferencias((actual) => {
+      const siguiente = { ...actual, [id]: actual[id] === false };
+      try {
+        window.localStorage.setItem("bulltrack-avisos", JSON.stringify(siguiente));
+      } catch {
+        // Si el navegador bloquea el almacenamiento, la preferencia dura solo mientras la página esté abierta.
+      }
+      return siguiente;
+    });
+  };
+  const minutosAhora = new Date().getHours() * 60 + new Date().getMinutes();
+  const enHorarioSilencioso = minutosAhora >= 22 * 60 + 30 || minutosAhora < 7 * 60;
   useEffect(() => {
     let active = true;
     const timeout = window.setTimeout(() => {
@@ -311,16 +417,20 @@ export default function PulseDashboard({ view = "today" }) {
     setStreak(data.racha ?? 0);
   }, []);
 
+  // Plan de músculo: si falla, la tarjeta simplemente no se muestra.
+  const loadMusculo = useCallback(async (fecha) => {
+    try {
+      const response = await fetch(`/api/musculo?fecha=${fecha}`, { cache: "no-store" });
+      setMusculo(await requestJson(response));
+    } catch {
+      setMusculo(null);
+    }
+  }, []);
+
   const loadRoutines = useCallback(async () => {
     const response = await fetch("/api/rutinas", { cache: "no-store" });
     const data = await requestJson(response);
     setRoutines(data.routines ?? []);
-  }, []);
-
-  const loadCiclo = useCallback(async () => {
-    const response = await fetch("/api/ciclo", { cache: "no-store" });
-    const data = await requestJson(response);
-    setSiguienteRutinaId(data.siguienteId ?? null);
   }, []);
 
   const deleteRoutine = async (routine) => {
@@ -355,10 +465,11 @@ export default function PulseDashboard({ view = "today" }) {
     setMeals(data.comidas);
     setWater(data.vasos);
     setSleep(data.sueno);
+    setSleepSchedule(data.suenoHorario ?? null);
     setCompleted(savedNames);
     setWorkoutDone(savedNames.length > 0);
-    await loadProgreso(fecha);
-  }, [loadProgreso]);
+    await Promise.all([loadProgreso(fecha), loadMusculo(fecha)]);
+  }, [loadProgreso, loadMusculo]);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("pulse-theme");
@@ -372,10 +483,6 @@ export default function PulseDashboard({ view = "today" }) {
     const timeout = window.setTimeout(() => loadRoutines().catch((error) => setToast(error.message)), 0);
     return () => window.clearTimeout(timeout);
   }, [loadRoutines]);
-  useEffect(() => {
-    const timeout = window.setTimeout(() => loadCiclo().catch(() => {}), 0);
-    return () => window.clearTimeout(timeout);
-  }, [loadCiclo]);
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       const now = new Date();
@@ -485,6 +592,7 @@ export default function PulseDashboard({ view = "today" }) {
   // Modo guiado: un ejercicio a la vez, con cronómetro de descanso entre ejercicios.
   const ejercicioGuia = sessionExercises[guiaIndex] ?? sessionExercises[0];
   const ultimoEjercicio = guiaIndex >= sessionExercises.length - 1;
+  const seriesGuia = Math.max(1, Number(workoutValues[ejercicioGuia?.name]?.sets ?? ejercicioGuia?.sets) || 1);
   const ultimaGuia = ultimasSeries[ejercicioGuia?.name];
   const sugerenciaGuia = ultimaGuia && ejercicioGuia ? sugerirProgresion(ultimaGuia, ejercicioGuia.reps) : null;
 
@@ -499,66 +607,87 @@ export default function PulseDashboard({ view = "today" }) {
     }
   };
 
+  const detenerDescanso = () => {
+    setDescansoFin(0);
+    setDescansoTotal(0);
+    setDescansoListo(false);
+    setCronoInicio(0);
+  };
+
   const iniciarGuia = () => {
     const primero = sessionExercises.findIndex((exercise) => !completed.includes(exercise.name));
     setGuiaIndex(primero === -1 ? 0 : primero);
-    setDescanso(0);
-    setDescansoTotal(0);
+    setSerieGuia(1);
+    detenerDescanso();
     setModal("guided");
     cargarUltimas();
   };
 
   const siguienteEjercicio = () => {
-    setDescanso(0);
-    setDescansoTotal(0);
+    detenerDescanso();
+    setSerieGuia(1);
     setGuiaIndex((index) => Math.min(index + 1, sessionExercises.length - 1));
   };
 
   const anteriorEjercicio = () => {
-    setDescanso(0);
-    setDescansoTotal(0);
+    detenerDescanso();
+    setSerieGuia(1);
     setGuiaIndex((index) => Math.max(index - 1, 0));
   };
 
-  const completarEjercicio = () => {
+  // Completar una serie abre el descanso; la última serie no descansa y se cierra con "Terminar ejercicio".
+  const completarSerie = () => {
     if (!ejercicioGuia) return;
-    if (!completed.includes(ejercicioGuia.name)) toggleExercise(ejercicioGuia.name);
-    if (ultimoEjercicio) return;
     const segundos = ejercicioGuia.rest || 90;
+    const inicio = Date.now();
+    setUltimaSerieSeg(cronoInicio ? Math.round((inicio - cronoInicio) / 1000) : 0);
+    setCronoInicio(0);
+    setSerieGuia((serie) => serie + 1);
+    setAhora(inicio);
     setDescansoTotal(segundos);
-    setDescanso(segundos);
+    setDescansoListo(false);
+    setDescansoFin(inicio + segundos * 1000);
   };
 
-  // Cuenta el descanso de un segundo en un segundo.
-  useEffect(() => {
-    if (modal !== "guided" || descanso <= 0) return undefined;
-    const timeout = window.setTimeout(() => setDescanso((seconds) => seconds - 1), 1000);
-    return () => window.clearTimeout(timeout);
-  }, [modal, descanso]);
+  const terminarEjercicio = () => {
+    if (!ejercicioGuia) return;
+    setUltimaSerieSeg(cronoInicio ? Math.round((ahora - cronoInicio) / 1000) : 0);
+    setCronoInicio(0);
+    if (!completed.includes(ejercicioGuia.name)) toggleExercise(ejercicioGuia.name);
+    if (!ultimoEjercicio) siguienteEjercicio();
+  };
 
-  // Al terminar el descanso pasa solo al siguiente ejercicio.
-  useEffect(() => {
-    if (modal !== "guided" || !descansoTotal || descanso > 0) return;
+  // Desde "¡Vamos!" empieza el cronómetro de la serie, con frases motivadoras en pantalla.
+  const continuarTrasDescanso = () => {
+    const inicio = Date.now();
+    setDescansoFin(0);
     setDescansoTotal(0);
-    setGuiaIndex((index) => Math.min(index + 1, sessionExercises.length - 1));
-  }, [descanso, descansoTotal, modal, sessionExercises.length]);
+    setDescansoListo(false);
+    setAhora(inicio);
+    setCronoInicio(inicio);
+  };
+
+  // Actualiza los relojes: cuenta el descanso y, al llegar a cero, muestra "¡Ok, let's go!"; durante la serie, el cronómetro.
+  useEffect(() => {
+    const contando = descansoFin > 0 && !descansoListo;
+    if (modal !== "guided" || (!contando && !cronoInicio)) return undefined;
+    const intervalo = window.setInterval(() => {
+      const tiempo = Date.now();
+      setAhora(tiempo);
+      if (contando && tiempo >= descansoFin) setDescansoListo(true);
+    }, 250);
+    return () => window.clearInterval(intervalo);
+  }, [modal, descansoFin, descansoListo, cronoInicio]);
+
+  const descansoActivo = modal === "guided" && descansoFin > 0;
+  const enEjercicio = modal === "guided" && cronoInicio > 0;
+  const overlayActivo = descansoActivo || enEjercicio;
+  const segundosDescanso = descansoActivo ? Math.max(0, Math.ceil((descansoFin - ahora) / 1000)) : 0;
+  const segundosSerie = enEjercicio ? Math.max(0, Math.floor((ahora - cronoInicio) / 1000)) : 0;
+  const progresoDescanso = descansoTotal ? segundosDescanso / descansoTotal : 0;
+  const indiceFrase = Math.floor(ahora / 6000) % FRASES_DESCANSO.length;
 
   // Cambia la próxima rutina a mano (por ejemplo, si la máquina está ocupada).
-  const cambiarSiguienteRutina = async (event) => {
-    const siguienteId = Number(event.target.value);
-    try {
-      const response = await fetch("/api/ciclo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siguienteId }),
-      });
-      const data = await requestJson(response);
-      setSiguienteRutinaId(data.siguienteId);
-    } catch (error) {
-      setToast(error.message);
-    }
-  };
-
   const finishWorkout = async () => {
     if (saving || !completedSessionNames.length) return;
     setSaving(true);
@@ -588,16 +717,6 @@ export default function PulseDashboard({ view = "today" }) {
       await loadDashboard(dateKey);
       setCalendarVersion((current) => current + 1);
       setModal(null);
-      // Al terminar una sesión del ciclo, la próxima pasa a ser la siguiente rutina.
-      if (rutinaCiclo) {
-        const cicloResponse = await fetch("/api/ciclo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ completada: rutinaCiclo.id }),
-        });
-        const cicloData = await requestJson(cicloResponse);
-        setSiguienteRutinaId(cicloData.siguienteId);
-      }
       setToast("Entrenamiento guardado. ¡Un día más de constancia!");
     } catch (error) {
       setToast(error.message);
@@ -806,18 +925,15 @@ export default function PulseDashboard({ view = "today" }) {
     }
   };
 
-  const addSleep = async (event) => {
-    event.preventDefault();
+  const addSleep = async ({ horaDormir, horaDespertar }) => {
     if (saving) return;
-
-    const horas = Number(new FormData(event.currentTarget).get("horas"));
 
     setSaving(true);
     try {
       const response = await fetch("/api/sueno", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fecha: dateKey, horas }),
+        body: JSON.stringify({ fecha: dateKey, horaDormir, horaDespertar }),
       });
       await requestJson(response);
       await loadDashboard(dateKey);
@@ -836,7 +952,8 @@ export default function PulseDashboard({ view = "today" }) {
     if (saving) return;
     const form = new FormData(event.currentTarget);
     const kg = Number(form.get("kg"));
-    const estatura = Number(form.get("estatura"));
+    const estaturaTexto = String(form.get("estatura") ?? "").trim();
+    const estatura = estaturaTexto ? Number(estaturaTexto) : undefined;
     setSaving(true);
     try {
       const response = await fetch("/api/peso", {
@@ -848,7 +965,7 @@ export default function PulseDashboard({ view = "today" }) {
       await loadDashboard(dateKey);
       setCalendarVersion((current) => current + 1);
       setModal(null);
-      setToast("Peso y estatura guardados en tu progreso.");
+      setToast("Peso guardado en tu progreso.");
     } catch (error) {
       setToast(error.message);
     } finally {
@@ -871,17 +988,17 @@ export default function PulseDashboard({ view = "today" }) {
   const remainingCalories = Math.max(goals.calories - nutrition.calories, 0);
   const caloriePercentage = Math.min((nutrition.calories / goals.calories) * 100, 100);
   const bmi = bodyWeight && bodyHeight ? Math.round((bodyWeight / ((bodyHeight / 100) ** 2)) * 10) / 10 : null;
+  // Variación del peso frente al registro anterior (el historial llega hasta el día seleccionado).
+  const ultimosPesos = weightHistory.slice(-2);
+  const variacionPeso = ultimosPesos.length === 2 ? Math.round((ultimosPesos[1].kg - ultimosPesos[0].kg) * 10) / 10 : null;
   const bmiCategory = bmi === null ? "" : bmi < 18.5 ? "Bajo peso" : bmi < 25 ? "Rango saludable" : bmi < 30 ? "Sobrepeso" : "IMC elevado";
-  const proteinRange = bodyWeight ? [Math.round(bodyWeight * 1.6), Math.round(bodyWeight * 2)] : null;
-  const calorieRange = [Math.round(goals.calories * 1.05), Math.round(goals.calories * 1.1)];
-  const weeklyGainRange = bodyWeight ? [Math.round(bodyWeight * 0.0025 * 100) / 100, Math.round(bodyWeight * 0.005 * 100) / 100] : null;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Link className="brand" href="/" aria-label="Pulse, ir al inicio">
+        <Link className="brand" href="/" aria-label="BullTrack, ir al inicio">
           <span className="brand-mark"><BulldogMark size={31} /></span>
-          <span>pulse<span className="brand-dot">.</span></span>
+          <span>bulltrack<span className="brand-dot">.</span></span>
         </Link>
 
         <div className="sidebar-label">MI ESPACIO</div>
@@ -891,6 +1008,7 @@ export default function PulseDashboard({ view = "today" }) {
           <Link className={`nav-link${view === "training" ? " active" : ""}`} href="/entrenamiento"><Dumbbell size={19} /> Entrenamiento</Link>
           <Link className={`nav-link${view === "nutrition" ? " active" : ""}`} href="/nutricion"><Utensils size={19} /> Nutrición</Link>
           <Link className={`nav-link${view === "coach" ? " active" : ""}`} href="/coach"><Sparkles size={19} /> Coach</Link>
+          <Link className={`nav-link${view === "notifications" ? " active" : ""}`} href="/notificaciones"><Bell size={19} /> Notificaciones</Link>
           <Link className={`nav-link${view === "progress" ? " active" : ""}`} href="/progreso"><ChartNoAxesColumnIncreasing size={19} /> Progreso</Link>
         </nav>
         <div className="sidebar-spacer" />
@@ -910,14 +1028,14 @@ export default function PulseDashboard({ view = "today" }) {
       </aside>
 
       <header className="mobile-header">
-        <Link className="brand" href="/" aria-label="Pulse, ir al inicio">
-          <span className="brand-mark"><BulldogMark size={28} /></span>
-          <span>pulse<span className="brand-dot">.</span></span>
+        <Link className="brand" href="/" aria-label="BullTrack, ir al inicio">
+          <span className="brand-mark"><BulldogMark size={42} /></span>
+          <span>bulltrack<span className="brand-dot">.</span></span>
         </Link>
         <div className="mobile-header-actions">
-          <button className={`icon-button ${pushState === "activo" ? "bell-active" : ""}`} type="button" aria-label={pushState === "activo" ? "Desactivar avisos" : "Activar avisos"} title={pushState === "activo" ? "Avisos activados" : "Activar avisos"} onClick={toggleNotifications}>
+          <Link className={`icon-button ${pushState === "activo" ? "bell-active" : ""}`} href="/notificaciones" aria-label="Ver notificaciones" title="Notificaciones">
             <Bell size={20} />
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -935,9 +1053,9 @@ export default function PulseDashboard({ view = "today" }) {
                 {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
                 <span>{theme === "dark" ? "Modo normal" : "Modo oscuro"}</span>
               </button>
-              <button className={`icon-button desktop-bell ${pushState === "activo" ? "bell-active" : ""}`} type="button" aria-label={pushState === "activo" ? "Desactivar avisos" : "Activar avisos"} title={pushState === "activo" ? "Avisos activados" : "Activar avisos"} onClick={toggleNotifications}>
+              <Link className={`icon-button desktop-bell ${pushState === "activo" ? "bell-active" : ""}`} href="/notificaciones" aria-label="Ver notificaciones" title="Notificaciones">
                 <Bell size={20} />
-              </button>
+              </Link>
             </div>
           </section>
 
@@ -961,6 +1079,17 @@ export default function PulseDashboard({ view = "today" }) {
             <button className="capture-card" type="button" onClick={() => { setMealDraft(null); setModal("meal"); }}><span className="capture-icon"><Star size={24} /></span><strong>Cargar favorito</strong><small>Elige un alimento que ya registraste</small></button>
             <button className="capture-card" type="button" disabled><span className="capture-icon"><BookOpen size={24} /></span><strong>Desde recetas</strong><small>Próximamente</small></button>
           </section>)}
+
+          {view === "notifications" && (
+            <NotificationsFeed
+              avisos={avisos}
+              preferencias={preferencias}
+              silencioso={preferencias.silencioso !== false && enHorarioSilencioso}
+              onCambiarPreferencia={cambiarPreferencia}
+              avisosTelefono={pushState === "activo"}
+              onCambiarAvisosTelefono={toggleNotifications}
+            />
+          )}
 
           {view === "coach" && (<section className="coach-panel" aria-label="Análisis con Claude">
             <div className="coach-actions">
@@ -1072,13 +1201,6 @@ export default function PulseDashboard({ view = "today" }) {
                   <span><Dumbbell size={16} /> {sessionExercises.length} {sessionExercises.length === 1 ? "ejercicio" : "ejercicios"}</span>
                   <span><Clock3 size={16} /> {todayRoutine?.duration ?? "Descanso"}</span>
                 </div>
-                {esHoy && routines.length > 1 && (
-                  <label className="cycle-picker">Rutina de hoy
-                    <select value={todayRoutine?.id ?? ""} onChange={cambiarSiguienteRutina} disabled={saving}>
-                      {routines.map((routine) => <option key={routine.id} value={routine.id}>{routine.name}</option>)}
-                    </select>
-                  </label>
-                )}
                 <button className={`primary-button ${sessionWasSaved ? "completed-button" : ""}`} type="button" disabled={!todayRoutine || !sessionExercises.length} onClick={iniciarGuia}>
                   {sessionWasSaved ? <Check size={18} /> : <Zap size={18} fill="currentColor" />}
                   {!todayRoutine ? "Sin rutina para hoy" : sessionWasSaved ? "Sesión completada" : completedSessionNames.length ? "Continuar rutina" : "Empezar rutina"}
@@ -1334,23 +1456,27 @@ export default function PulseDashboard({ view = "today" }) {
               <div className="card-heading">
                 <div><p className="section-kicker">COMPOSICIÓN CORPORAL</p><h2>Peso, estatura e IMC</h2></div>
                 <button className="secondary-button" type="button" onClick={() => setModal("weight")}>
-                  <Plus size={17} /> {bodyWeight !== null ? "Actualizar" : "Registrar"}
+                  <Plus size={17} /> Registrar peso
                 </button>
               </div>
               <div className="body-composition-grid">
-                <div><span>Peso actual</span><strong>{bodyWeight !== null ? `${bodyWeight} kg` : "—"}</strong></div>
+                <div><span>Peso actual</span><strong>{bodyWeight !== null ? `${bodyWeight} kg` : "—"}</strong><small>{variacionPeso !== null ? `${variacionPeso > 0 ? "+" : ""}${variacionPeso} kg vs registro anterior` : "Registra dos días para ver cambios"}</small></div>
                 <div><span>Estatura</span><strong>{bodyHeight !== null ? `${bodyHeight} cm` : "—"}</strong></div>
                 <div><span>IMC orientativo</span><strong>{bmi ?? "—"}</strong><small>{bmiCategory || "Completa tus medidas"}</small></div>
               </div>
-              {bodyWeight !== null && bodyHeight !== null && (
+              {musculo && (
                 <div className="muscle-gain-guide">
-                  <div className="muscle-gain-heading"><Zap size={17} /><div><strong>Guía aproximada para ganar masa</strong><span>Basada en tu peso actual</span></div></div>
+                  <div className="muscle-gain-heading"><Zap size={17} /><div><strong>Plan para ganar músculo</strong><span>Con tus datos de los últimos 7 días</span></div></div>
                   <div className="muscle-gain-values">
-                    <div><span>Proteína diaria</span><strong>{proteinRange[0]}–{proteinRange[1]} g</strong></div>
-                    <div><span>Calorías objetivo*</span><strong>{calorieRange[0]}–{calorieRange[1]} kcal</strong></div>
-                    <div><span>Subida semanal</span><strong>{weeklyGainRange[0]}–{weeklyGainRange[1]} kg</strong></div>
+                    <div><span>Proteína diaria</span><strong>{musculo.proteina ? `${musculo.proteina[0]}–${musculo.proteina[1]} g` : "—"}</strong><small>{musculo.consumoProteina !== null ? `Tú: ${musculo.consumoProteina} g` : "Sin registros"}</small></div>
+                    <div><span>Calorías objetivo</span><strong>{musculo.metaKcal ? `${musculo.metaKcal[0]}–${musculo.metaKcal[1]} kcal` : "—"}</strong><small>{musculo.mantenimiento !== null ? `Mantenimiento ~${musculo.mantenimiento} kcal` : "Mantenimiento: pendiente"}</small></div>
+                    <div><span>Subida semanal</span><strong>{musculo.subidaSemana ? `${musculo.subidaSemana[0]}–${musculo.subidaSemana[1]} kg` : "—"}</strong><small>{musculo.tendenciaKgSemana !== null ? `Tú: ${musculo.tendenciaKgSemana > 0 ? "+" : ""}${musculo.tendenciaKgSemana} kg/sem` : "Pesa al menos 2 semanas"}</small></div>
                   </div>
-                  <p>*Rango calculado suponiendo que {goals.calories} kcal sea tu mantenimiento. El IMC es una referencia general y no distingue músculo de grasa.</p>
+                  {musculo.ajuste && <p className="muscle-gain-adjust">{musculo.ajuste}</p>}
+                  {musculo.avisos.length > 0 && (
+                    <ul className="muscle-gain-tips">{musculo.avisos.map((aviso) => <li key={aviso}>{aviso}</li>)}</ul>
+                  )}
+                  <p>El IMC es una referencia general y no distingue músculo de grasa.</p>
                 </div>
               )}
               {weightHistory.length > 1 ? (
@@ -1402,6 +1528,47 @@ export default function PulseDashboard({ view = "today" }) {
       </nav>
       {view !== "capture" && (<Link className="meal-fab" href="/captura" prefetch={true} aria-label="Añadir comida" title="Añadir comida"><Plus size={26} strokeWidth={2.4} /></Link>)}
 
+      {overlayActivo && (
+        <div className="rest-screen" role="timer" aria-live="polite">
+          {enEjercicio ? (
+            <>
+              <p key={indiceFrase} className="rest-phrase">{FRASES_DESCANSO[indiceFrase]}</p>
+              <p className="rest-series-label">{ejercicioGuia.name} · serie {serieGuia} de {seriesGuia}</p>
+              <div className="rest-stopwatch">
+                <span>Tiempo de la serie</span>
+                <strong>{formatoTiempo(segundosSerie)}</strong>
+              </div>
+              <button className="rest-screen-button" type="button" disabled={saving} onClick={serieGuia < seriesGuia ? completarSerie : terminarEjercicio}>
+                <Check size={20} /> {serieGuia < seriesGuia ? `Completar serie ${serieGuia}` : "Terminar ejercicio"}
+              </button>
+            </>
+          ) : descansoListo ? (
+            <div className="rest-ready">
+              <p className="rest-ready-title">¡Ok, let&apos;s go!</p>
+              <p className="rest-ready-text">Vamos con el ejercicio</p>
+              <p className="rest-ready-sub">{ejercicioGuia.name} · serie {serieGuia} de {seriesGuia}</p>
+              <button className="rest-screen-button" type="button" onClick={continuarTrasDescanso}>¡Vamos!</button>
+            </div>
+          ) : (
+            <>
+              <p key={indiceFrase} className="rest-phrase">{FRASES_DESCANSO[indiceFrase]}</p>
+              <div className="rest-ring">
+                <svg viewBox="0 0 200 200" aria-hidden="true">
+                  <circle className="rest-ring-track" cx="100" cy="100" r="90" />
+                  <circle className="rest-ring-progress" cx="100" cy="100" r="90" style={{ strokeDashoffset: 565.49 * (1 - progresoDescanso) }} />
+                </svg>
+                <strong>{Math.floor(segundosDescanso / 60)}:{String(segundosDescanso % 60).padStart(2, "0")}</strong>
+              </div>
+              <p className="rest-next">Descanso{ultimaSerieSeg ? ` · última serie ${formatoTiempo(ultimaSerieSeg)}` : ""} · siguiente: serie {serieGuia} de {seriesGuia}</p>
+              <div className="rest-screen-actions">
+                <button className="rest-screen-secondary" type="button" onClick={() => { setDescansoFin((fin) => fin + 15000); setDescansoTotal((total) => total + 15); }}>+15 s</button>
+                <button className="rest-screen-secondary" type="button" onClick={() => setDescansoListo(true)}>Saltar descanso</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {modal && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModal(null); }}>
           <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1411,7 +1578,7 @@ export default function PulseDashboard({ view = "today" }) {
               <>
                 <p className="section-kicker">SESIÓN DE HOY · {todayRoutine?.name}</p>
                 <h2 id="modal-title">{ejercicioGuia.name}</h2>
-                <p className="modal-intro">Ejercicio {guiaIndex + 1} de {sessionExercises.length} · Objetivo: {ejercicioGuia.detail}</p>
+                <p className="modal-intro">Ejercicio {guiaIndex + 1} de {sessionExercises.length} · Objetivo: {ejercicioGuia.detail}{!completed.includes(ejercicioGuia.name) && ` · Serie ${serieGuia} de ${seriesGuia}`}</p>
                 {ultimaGuia && (
                   <div className="guided-last">
                     <p>Última vez: <strong>{ultimaGuia.peso} kg</strong> · {ultimaGuia.repeticiones} · {formatearFecha(ultimaGuia.fecha)}</p>
@@ -1422,25 +1589,13 @@ export default function PulseDashboard({ view = "today" }) {
 
                 <button className="guided-unmark" type="button" disabled={saving} onClick={() => setModal("workout")}>Ver lista completa y cambiar de ejercicio</button>
 
-                {descanso > 0 ? (
-                  <div className="rest-timer" role="timer">
-                    <span>Descanso</span>
-                    <strong>{Math.floor(descanso / 60)}:{String(descanso % 60).padStart(2, "0")}</strong>
-                    <div className="rest-timer-actions">
-                      <button className="form-cancel" type="button" onClick={() => setDescanso((seconds) => seconds + 15)}>+15 s</button>
-                      <button className="form-primary" type="button" onClick={siguienteEjercicio}>Saltar descanso</button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
+                <>
                     <div className="exercise-log-card">
                       <div className="exercise-log-inputs">
                         <label>Series
                           <input type="number" min="1" max="20" value={workoutValues[ejercicioGuia.name]?.sets ?? ejercicioGuia.sets} onChange={(event) => updateWorkoutValue(ejercicioGuia.name, "sets", event.target.value)} disabled={saving} />
                         </label>
-                        <label>Reps por serie
-                          <input type="text" inputMode="text" placeholder="8, 9, 8 o solo 8" value={workoutValues[ejercicioGuia.name]?.reps ?? ""} onChange={(event) => updateWorkoutValue(ejercicioGuia.name, "reps", event.target.value)} disabled={saving} />
-                        </label>
+                        <RepsField exerciseName={ejercicioGuia.name} sets={workoutValues[ejercicioGuia.name]?.sets ?? ejercicioGuia.sets} value={workoutValues[ejercicioGuia.name]?.reps ?? ""} onChange={(texto) => updateWorkoutValue(ejercicioGuia.name, "reps", texto)} disabled={saving} />
                         <label>Peso base (kg)
                           <input type="number" min="0" max="500" step="0.25" value={workoutValues[ejercicioGuia.name]?.baseWeight ?? workoutValues[ejercicioGuia.name]?.weight ?? ejercicioGuia.weightValue ?? 0} onChange={(event) => updateWorkoutValue(ejercicioGuia.name, "baseWeight", event.target.value)} disabled={saving} />
                         </label>
@@ -1454,19 +1609,22 @@ export default function PulseDashboard({ view = "today" }) {
 
                     <div className="guided-actions">
                       <button className="form-cancel" type="button" disabled={saving || guiaIndex === 0} onClick={anteriorEjercicio}>Anterior</button>
-                      {!completed.includes(ejercicioGuia.name) ? (
-                        <button className="form-primary" type="button" disabled={saving} onClick={completarEjercicio}><Check size={18} /> Completar ejercicio</button>
-                      ) : ultimoEjercicio ? (
-                        <button className="form-primary" type="button" disabled={saving || !completedSessionNames.length} onClick={finishWorkout}><Check size={18} /> {saving ? "Guardando sesión..." : "Finalizar sesión"}</button>
+                      {completed.includes(ejercicioGuia.name) ? (
+                        ultimoEjercicio ? (
+                          <button className="form-primary" type="button" disabled={saving || !completedSessionNames.length} onClick={finishWorkout}><Check size={18} /> {saving ? "Guardando sesión..." : "Finalizar sesión"}</button>
+                        ) : (
+                          <button className="form-primary" type="button" disabled={saving} onClick={siguienteEjercicio}>Siguiente ejercicio <ArrowRight size={18} /></button>
+                        )
+                      ) : serieGuia < seriesGuia ? (
+                        <button className="form-primary" type="button" disabled={saving} onClick={completarSerie}><Check size={18} /> Completar serie {serieGuia} de {seriesGuia}</button>
                       ) : (
-                        <button className="form-primary" type="button" disabled={saving} onClick={siguienteEjercicio}>Siguiente ejercicio <ArrowRight size={18} /></button>
+                        <button className="form-primary" type="button" disabled={saving} onClick={terminarEjercicio}><Check size={18} /> Terminar ejercicio</button>
                       )}
                     </div>
                     {completed.includes(ejercicioGuia.name) && (
                       <button className="guided-unmark" type="button" disabled={saving} onClick={() => toggleExercise(ejercicioGuia.name)}>Desmarcar (solo en pantalla, no borra nada)</button>
                     )}
-                  </>
-                )}
+                </>
               </>
             ) : modal === "workout" ? (
               <>
@@ -1493,9 +1651,7 @@ export default function PulseDashboard({ view = "today" }) {
                           <label>Series
                             <input type="number" min="1" max="20" value={values.sets ?? exercise.sets} onChange={(event) => updateWorkoutValue(exercise.name, "sets", event.target.value)} disabled={saving} />
                           </label>
-                          <label>Reps por serie
-                            <input type="text" inputMode="text" placeholder="8, 9, 8 o solo 8" aria-label={`Repeticiones realizadas en cada serie de ${exercise.name}`} value={values.reps ?? ""} onChange={(event) => updateWorkoutValue(exercise.name, "reps", event.target.value)} disabled={saving} />
-                          </label>
+                          <RepsField exerciseName={exercise.name} sets={values.sets ?? exercise.sets} value={values.reps ?? ""} onChange={(texto) => updateWorkoutValue(exercise.name, "reps", texto)} disabled={saving} />
                           <label>Peso base (kg)
                             <input type="number" min="0" max="500" step="0.25" value={values.baseWeight ?? values.weight ?? exercise.weightValue ?? 0} onChange={(event) => updateWorkoutValue(exercise.name, "baseWeight", event.target.value)} disabled={saving} />
                           </label>
@@ -1517,29 +1673,21 @@ export default function PulseDashboard({ view = "today" }) {
             ) : modal === "sleep" ? (
               <>
                 <p className="section-kicker">DESCANSO</p>
-                <h2 id="modal-title">¿Cuánto dormiste?</h2>
-                <p className="modal-intro">Registra las horas de anoche. Dormir bien también es entrenar.</p>
-                <form className="meal-form" onSubmit={addSleep}>
-                  <label className="full-field">Horas dormidas
-                    <input name="horas" type="number" min="0" max="24" step="0.5" defaultValue={sleep ?? 7.5} required autoFocus />
-                  </label>
-                  <div className="form-actions">
-                    <button className="form-cancel" type="button" disabled={saving} onClick={() => setModal(null)}>Cancelar</button>
-                    <button className="form-primary" type="submit" disabled={saving}><Check size={18} /> {saving ? "Guardando..." : "Guardar descanso"}</button>
-                  </div>
-                </form>
+                <h2 id="modal-title">¿A qué hora dormiste?</h2>
+                <p className="modal-intro">Anota a qué hora te acostaste y a qué hora te despertaste. Las horas se calculan solas.</p>
+                <SleepForm initial={sleepSchedule} saving={saving} onSubmit={addSleep} onCancel={() => setModal(null)} />
               </>
             ) : modal === "weight" ? (
               <>
                 <p className="section-kicker">PROGRESO PERSONAL</p>
-                <h2 id="modal-title">Peso y estatura</h2>
-                <p className="modal-intro">Estas medidas permiten calcular tu IMC y una guía nutricional aproximada para ganar masa muscular.</p>
+                <h2 id="modal-title">Registrar peso</h2>
+                <p className="modal-intro">Pésate en ayunas y a la misma hora para que la variación sea real. Así se calculan tu tendencia y tu plan para ganar músculo.</p>
                 <form className="meal-form" onSubmit={addWeight}>
                   <label>Peso corporal (kg)
                     <input name="kg" type="number" min="20" max="500" step="0.1" defaultValue={bodyWeight ?? ""} placeholder="Ej. 72,5" required autoFocus />
                   </label>
-                  <label>Estatura (cm)
-                    <input name="estatura" type="number" min="100" max="250" step="0.1" defaultValue={bodyHeight ?? ""} placeholder="Ej. 175" required />
+                  <label>Estatura (cm), opcional
+                    <input name="estatura" type="number" min="100" max="250" step="0.1" defaultValue={bodyHeight ?? ""} placeholder="Solo si cambió" />
                   </label>
                   <div className="form-actions">
                     <button className="form-cancel" type="button" disabled={saving} onClick={() => setModal(null)}>Cancelar</button>

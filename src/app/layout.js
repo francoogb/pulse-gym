@@ -26,12 +26,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Pulse — Tu espacio fitness",
+  title: "BullTrack — Tu espacio fitness",
   description: "Entrenamiento, nutrición y bienestar en un solo lugar.",
-  applicationName: "Pulse",
+  applicationName: "BullTrack",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/bulldog-192.png", shortcut: "/bulldog-192.png", apple: "/bulldog-apple.png" },
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Pulse" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "BullTrack" },
 };
 
 export const viewport = { themeColor: "#167c6d", viewportFit: "cover" };
