@@ -7,35 +7,38 @@ Esta página muestra cómo se conecta todo. Los diagramas se ven en GitHub y en 
 Pulse corre en tu PC como un solo servidor. El celular se conecta por Tailscale; la app instalada (PWA) usa el service worker para avisos.
 
 ```mermaid
-flowchart LR
-    subgraph Dispositivos
-        CEL["Celular<br/>(app instalada / Chrome)"]
-        PC["Navegador del PC"]
+flowchart TD
+    U["👤 Usuario<br/>(celular / PC)"]
+    TS["🔒 Tailscale Serve<br/>HTTPS privado"]
+    U -->|HTTPS| TS
+
+    subgraph SRV["🖥️ Servidor Next.js 16 · puerto 4317"]
+        PX{"🛡️ proxy.js<br/>cookie firmada o Basic"}
+        LOGIN["🔑 /acceso<br/>inicio de sesión"]
+        PG["📄 Páginas App Router<br/>pulse-dashboard.js"]
+        API["⚙️ API Route Handlers<br/>src/app/api/*"]
+        SW["📦 sw.js (Serwist)<br/>caché y avisos"]
     end
+    TS --> PX
+    PX -->|sin sesión| LOGIN
+    PX -->|con sesión| PG --> API
 
-    TS["Tailscale Serve<br/>(HTTPS privado)"]
-
-    subgraph Servidor["Servidor Next.js 16 · puerto 4317"]
-        PROXY["proxy.js<br/>cookie firmada o Basic"]
-        PAGINAS["Páginas App Router<br/>pulse-dashboard.js"]
-        API["API Route Handlers<br/>src/app/api/*"]
-        SW["sw.js<br/>(Serwist)"]
-    end
-
-    DB[("gym.db<br/>SQLite")]
-    CLAUDE["Claude Code CLI<br/>(modelo de la config)"]
-    OFF["Open Food Facts<br/>(códigos de barras)"]
-    PUSHSRV["Servicio push<br/>del navegador"]
-    TAREA["Programador de tareas<br/>scripts/avisos.mjs"]
-
-    CEL -->|HTTPS| TS --> PROXY
-    PC -->|localhost:4317| PROXY
-    PROXY --> PAGINAS --> API
+    DB[("🗄️ gym.db<br/>SQLite")]
+    CLI["🤖 Claude Code CLI<br/>fotos · describir · coach · ejercicio IA"]
+    OFF["🍎 Open Food Facts<br/>códigos de barras"]
     API -->|lee y escribe| DB
-    API -->|fotos, describir,<br/>coach, ejercicio IA| CLAUDE
+    API -->|prompt + imagen| CLI
     API -->|código de barras| OFF
-    TAREA -->|lee registros| DB
-    TAREA -->|web-push con VAPID| PUSHSRV --> SW --> CEL
+
+    subgraph TAREAS["⏰ Programador de tareas (Windows)"]
+        T1["Pulse servidor<br/>al iniciar sesión"]
+        T2["Pulse avisos<br/>cada hora"]
+    end
+    T1 -.->|npm run start| SRV
+    T2 -.->|lee registros| DB
+    T2 -.->|web-push con VAPID| PUSH["📲 Servicio push<br/>del navegador"]
+    PUSH -.-> SW
+    SW -.-> U
 ```
 
 ## 2. Flujo de una foto de comida
