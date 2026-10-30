@@ -15,18 +15,32 @@ function normalizarEjercicio(item) {
     weightValue: savedExercise.peso,
   } : null);
   if (!plan) return null;
-  if (typeof item === "string") return { ...plan, actualSets: plan.sets, actualReps: plan.reps, actualWeight: plan.weightValue };
+  if (typeof item === "string") return {
+    ...plan,
+    actualSets: plan.sets,
+    actualReps: plan.reps,
+    actualWeight: plan.weightValue,
+    actualBaseWeight: plan.weightValue,
+    actualExtraWeight: 0,
+    actualNotes: "",
+  };
 
   const actualSets = item.sets;
-  const actualWeight = item.weight;
+  const actualBaseWeight = item.baseWeight;
+  const actualExtraWeight = item.extraWeight;
+  const actualNotes = typeof item.notes === "string" ? item.notes.trim() : "";
   const actualReps = typeof item.reps === "string" ? item.reps.trim() : "";
-  const reps = actualReps.split(/[\s,/]+/).filter(Boolean).map(Number);
+  let reps = actualReps.split(/[\s,/]+/).filter(Boolean).map(Number);
+  if (reps.length === 1 && actualSets > 1) reps = Array(actualSets).fill(reps[0]);
   if (
     !Number.isInteger(actualSets) || actualSets < 1 || actualSets > 20 ||
-    !esNumeroEnRango(actualWeight, 0, 500) ||
+    !esNumeroEnRango(actualBaseWeight, 0, 500) ||
+    !esNumeroEnRango(actualExtraWeight, 0, 100) ||
+    actualNotes.length > 500 ||
     reps.length !== actualSets || reps.some((rep) => !Number.isInteger(rep) || rep < 1 || rep > 100)
   ) return null;
-  return { ...plan, actualSets, actualReps: reps.join("/"), actualWeight };
+  const actualWeight = Math.round((actualBaseWeight + actualExtraWeight) * 100) / 100;
+  return { ...plan, actualSets, actualReps: reps.join("/"), actualWeight, actualBaseWeight, actualExtraWeight, actualNotes };
 }
 
 export async function POST(request) {
@@ -43,11 +57,11 @@ export async function POST(request) {
   const guardarSesion = database.transaction((fecha, lista) => {
     database.prepare("DELETE FROM series WHERE fecha = ? AND sesion = ?").run(fecha, SESSION_ID);
     const insertar = database.prepare(`
-      INSERT INTO series (fecha, sesion, ejercicio, series, repeticiones, peso)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO series (fecha, sesion, ejercicio, series, repeticiones, peso, peso_base, peso_extra, notas)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const exercise of lista) {
-      insertar.run(fecha, SESSION_ID, exercise.name, exercise.actualSets, exercise.actualReps, exercise.actualWeight);
+      insertar.run(fecha, SESSION_ID, exercise.name, exercise.actualSets, exercise.actualReps, exercise.actualWeight, exercise.actualBaseWeight, exercise.actualExtraWeight, exercise.actualNotes);
     }
   });
 

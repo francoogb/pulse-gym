@@ -40,6 +40,9 @@ const SCHEMA = `
     series INTEGER NOT NULL CHECK (series > 0),
     repeticiones TEXT NOT NULL,
     peso REAL NOT NULL CHECK (peso >= 0),
+    peso_base REAL NOT NULL DEFAULT 0 CHECK (peso_base >= 0),
+    peso_extra REAL NOT NULL DEFAULT 0 CHECK (peso_extra >= 0),
+    notas TEXT NOT NULL DEFAULT '',
     creado_en TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (fecha, sesion, ejercicio)
   );
@@ -67,6 +70,11 @@ const SCHEMA = `
   CREATE TABLE IF NOT EXISTS plan_semanal (
     dia INTEGER PRIMARY KEY CHECK (dia >= 0 AND dia <= 6),
     activo INTEGER NOT NULL DEFAULT 0 CHECK (activo IN (0, 1))
+  );
+
+  CREATE TABLE IF NOT EXISTS ciclo (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    rutina_siguiente_id INTEGER REFERENCES rutinas(id) ON DELETE SET NULL
   );
 
   CREATE TABLE IF NOT EXISTS rutinas (
@@ -129,6 +137,18 @@ database.exec(SCHEMA);
 const mealColumns = database.prepare("PRAGMA table_info(comidas)").all();
 if (!mealColumns.some((column) => column.name === "cantidad")) {
   database.exec("ALTER TABLE comidas ADD COLUMN cantidad REAL NOT NULL DEFAULT 1 CHECK (cantidad > 0)");
+}
+
+const seriesColumns = database.prepare("PRAGMA table_info(series)").all();
+if (!seriesColumns.some((column) => column.name === "peso_base")) {
+  database.exec("ALTER TABLE series ADD COLUMN peso_base REAL NOT NULL DEFAULT 0 CHECK (peso_base >= 0)");
+  database.exec("UPDATE series SET peso_base = peso");
+}
+if (!seriesColumns.some((column) => column.name === "peso_extra")) {
+  database.exec("ALTER TABLE series ADD COLUMN peso_extra REAL NOT NULL DEFAULT 0 CHECK (peso_extra >= 0)");
+}
+if (!seriesColumns.some((column) => column.name === "notas")) {
+  database.exec("ALTER TABLE series ADD COLUMN notas TEXT NOT NULL DEFAULT ''");
 }
 if (!mealColumns.some((column) => column.name === "unidad")) {
   database.exec("ALTER TABLE comidas ADD COLUMN unidad TEXT NOT NULL DEFAULT 'porción'");

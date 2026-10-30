@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, BicepsFlexed, Check, Clock3, Dumbbell, Footprints, HeartPulse, Plus, Search, Trash2, X } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, BicepsFlexed, Check, Clock3, Dumbbell, Footprints, HeartPulse, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
 import { exerciseGroups, exerciseLibrary } from "@/lib/exercise-library";
 
 const DAYS = [
@@ -36,6 +36,12 @@ export default function RoutineBuilder({ onClose, onSaved, initialRoutine = null
   const [activeDay, setActiveDay] = useState(initialRoutine?.days?.[0] ?? 1);
   const [customOpen, setCustomOpen] = useState(false);
   const [customDraft, setCustomDraft] = useState({ name: "", group: "Pecho", sets: 3, reps: "8-12", weight: 0, rest: 90 });
+  const [iaOpen, setIaOpen] = useState(false);
+  const [iaTexto, setIaTexto] = useState("");
+  const [iaImagen, setIaImagen] = useState("");
+  const [iaBusy, setIaBusy] = useState(false);
+  const [iaResult, setIaResult] = useState(null);
+  const [iaError, setIaError] = useState("");
   const [draft, setDraft] = useState(() => initialRoutine ? {
     name: initialRoutine.name,
     description: initialRoutine.description ?? "",
@@ -76,6 +82,60 @@ export default function RoutineBuilder({ onClose, onSaved, initialRoutine = null
   }));
 
   const removeExercise = (index) => setDraft((current) => ({ ...current, exercises: current.exercises.filter((_, itemIndex) => itemIndex !== index) }));
+
+  // Identifica el ejercicio con Claude Code (texto o foto) y lo deja listo para agregarlo.
+  const buscarConIA = async () => {
+    if (iaBusy || (iaTexto.trim().length < 2 && !iaImagen)) return;
+    setIaBusy(true);
+    setIaError("");
+    setIaResult(null);
+    try {
+      const response = await fetch("/api/ejercicio-ia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto: iaTexto.trim(), imagen: iaImagen }),
+        signal: AbortSignal.timeout(120_000),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "No se pudo identificar el ejercicio.");
+      setIaResult(data.ejercicio);
+    } catch (error) {
+      setIaError(error.name === "TimeoutError" ? "La búsqueda tardó demasiado. Inténtalo de nuevo." : error.message);
+    } finally {
+      setIaBusy(false);
+    }
+  };
+
+  const leerFotoIA = (event) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      setIaError("La imagen debe pesar menos de 8 MB.");
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => setIaImagen(String(lector.result));
+    lector.readAsDataURL(file);
+  };
+
+  const agregarDesdeIA = () => {
+    if (!iaResult) return;
+    if (draft.exercises.some((exercise) => exercise.day === activeDay && exercise.name.toLowerCase() === iaResult.name.toLowerCase())) {
+      setIaError(`${iaResult.name} ya está añadido en ${DAY_NAMES[activeDay]}.`);
+      return;
+    }
+    setDraft((current) => ({
+      ...current,
+      exercises: [...current.exercises, { name: iaResult.name, group: iaResult.group, sets: iaResult.sets, reps: iaResult.reps, weight: 0, rest: iaResult.rest, day: activeDay, custom: true }],
+    }));
+    setIaTexto("");
+    setIaImagen("");
+    setIaResult(null);
+    setIaError("");
+    setIaOpen(false);
+    setMessage("");
+  };
 
   const addCustomExercise = () => {
     const name = customDraft.name.trim();
@@ -175,10 +235,36 @@ export default function RoutineBuilder({ onClose, onSaved, initialRoutine = null
           {step === 2 && (
             <div className="routine-exercise-step">
               <div className="routine-day-tabs" aria-label="Día que estás configurando">{orderedDays.map((day) => <button type="button" key={day.value} className={activeDay === day.value ? "active" : ""} onClick={() => { setActiveDay(day.value); setMessage(""); }}><span>{day.label}</span><small>{draft.exercises.filter((exercise) => exercise.day === day.value).length} ejercicios</small></button>)}</div>
-              <p className="routine-day-instruction">Elige los ejercicios para <strong>{DAY_NAMES[activeDay]}</strong>. Luego cambia de día arriba.</p>
+              <p className="routine-day-instruction">Ejercicios para <strong>{DAY_NAMES[activeDay]}</strong></p>
               <label className="routine-search"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar ejercicio…" autoFocus /></label>
               <div className="routine-group-filter">{exerciseGroups.map((item) => <button type="button" key={item} className={group === item ? "active" : ""} onClick={() => setGroup(item)}>{item}</button>)}</div>
-              <button type="button" className="custom-exercise-toggle" onClick={() => { setCustomOpen((current) => !current); setMessage(""); }}><Plus size={18} /> Ejercicio personalizado</button>
+              <div className="custom-exercise-row">
+                <button type="button" className="custom-exercise-toggle" onClick={() => { setCustomOpen((current) => !current); setIaOpen(false); setMessage(""); }}><Plus size={18} /> Personalizado</button>
+                <button type="button" className="custom-exercise-toggle custom-exercise-ia" onClick={() => { setIaOpen((current) => !current); setCustomOpen(false); setIaError(""); }}><Sparkles size={18} /> Con IA</button>
+              </div>
+              {iaOpen && <div className="ia-exercise-form">
+                <label>Describe el ejercicio
+                  <textarea value={iaTexto} maxLength={300} rows={2} onChange={(event) => setIaTexto(event.target.value)} placeholder="Ej. jalón al pecho agarre estrecho, o press en la máquina de hombros" disabled={iaBusy} />
+                </label>
+                <div className="ia-exercise-photo">
+                  <label className="ia-photo-button">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={leerFotoIA} disabled={iaBusy} />
+                    {iaImagen ? "Foto lista · cambiar" : "Tomar foto de la máquina"}
+                  </label>
+                  {iaImagen && <button type="button" className="ia-photo-clear" onClick={() => setIaImagen("")} disabled={iaBusy}>Quitar foto</button>}
+                </div>
+                <button type="button" className="ia-exercise-search" onClick={buscarConIA} disabled={iaBusy || (iaTexto.trim().length < 2 && !iaImagen)}>
+                  <Sparkles size={17} /> {iaBusy ? "Identificando…" : "Identificar con IA"}
+                </button>
+                {iaError && <p role="alert" className="ia-exercise-error">{iaError}</p>}
+                {iaResult && <article className="ia-exercise-result">
+                  <strong>{iaResult.name}</strong>
+                  <small>{iaResult.group} · {iaResult.sets} × {iaResult.reps} · descanso {iaResult.rest} s</small>
+                  {iaResult.explicacion && <p>{iaResult.explicacion}</p>}
+                  {iaResult.consejo && <p className="ia-exercise-tip">{iaResult.consejo}</p>}
+                  <button type="button" onClick={agregarDesdeIA}><Plus size={17} /> Agregar a {DAY_NAMES[activeDay]}</button>
+                </article>}
+              </div>}
               {customOpen && <div className="custom-exercise-form">
                 <label className="custom-name">Nombre<input value={customDraft.name} maxLength={60} onChange={(event) => setCustomDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Ej. Dominadas asistidas" autoFocus /></label>
                 <label>Grupo<select value={customDraft.group} onChange={(event) => setCustomDraft((current) => ({ ...current, group: event.target.value }))}>{CUSTOM_GROUPS.map((item) => <option key={item}>{item}</option>)}</select></label>

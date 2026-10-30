@@ -2389,7 +2389,7 @@ select:focus-visible {
 
 .exercise-log-inputs {
   display: grid;
-  grid-template-columns: 0.7fr 1.3fr 0.8fr;
+  grid-template-columns: 0.7fr 1.3fr;
   gap: 8px;
   margin: 12px 0 0 34px;
 }
@@ -2414,16 +2414,29 @@ select:focus-visible {
   font-size: 13px;
 }
 
+.weight-quick-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.weight-quick-actions button { min-height: 27px; padding: 0 9px; cursor: pointer; border: 1px solid color-mix(in srgb, var(--teal) 35%, var(--line)); border-radius: 8px; background: var(--mint); color: var(--teal); font-size: 10px; font-weight: 750; }
+.weight-quick-actions button:hover { border-color: var(--teal); }
+.weight-quick-actions button:disabled { cursor: not-allowed; opacity: .5; }
+.exercise-weight-total { margin: 9px 0 0 34px; color: var(--muted); font-size: 11px; text-align: right; }
+.exercise-weight-total strong { color: var(--ink); font-size: 13px; }
+.exercise-notes { display: grid; gap: 5px; margin: 10px 0 0 34px; color: var(--muted); font-size: 11px; font-weight: 650; }
+.exercise-notes textarea { width: 100%; min-height: 68px; padding: 10px 11px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; outline: 0; background: white; color: var(--ink); font: inherit; font-weight: 450; line-height: 1.4; }
+.exercise-notes textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 10%, transparent); }
+
 @media (max-width: 420px) {
   .exercise-log-inputs {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     margin-left: 0;
   }
 
   .exercise-log-inputs label:nth-child(2) {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: auto;
+    grid-row: auto;
   }
+
+  .exercise-weight-total,
+  .exercise-notes { margin-left: 0; }
 }
 
 .photo-file-input {
@@ -2761,6 +2774,7 @@ html[data-theme="dark"] .modal-close,
 html[data-theme="dark"] .meal-form input,
 html[data-theme="dark"] .meal-form select,
 html[data-theme="dark"] .exercise-log-inputs input,
+html[data-theme="dark"] .exercise-notes textarea,
 html[data-theme="dark"] .chart-select select,
 html[data-theme="dark"] .calendar-month-button,
 html[data-theme="dark"] .icon-button { background: var(--surface-soft); color: var(--ink); border-color: var(--line); }
@@ -2842,3 +2856,724 @@ html[data-theme="dark"] .calendar-day:hover { background: var(--surface-soft); c
 html[data-theme="dark"] .quality-pill { background: var(--mint); color: var(--ink); }
 html[data-theme="dark"] .streak-pill { background: #34211e; border-color: #553028; color: var(--coral); }
 html[data-theme="dark"] .theme-header-button { background: #101b20; color: var(--ink); border-color: var(--line); }
+
+/* Tira de la semana en la pantalla de Hoy */
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 18px;
+}
+
+.week-strip-day {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 0 8px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.week-strip-day span {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.week-strip-day strong {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.week-strip-day.selected strong {
+  background: var(--teal);
+  color: #041315;
+}
+
+.week-strip-day.planned strong {
+  box-shadow: inset 0 0 0 1px rgba(38, 214, 193, 0.45);
+}
+
+.week-strip-day.done strong {
+  box-shadow: inset 0 0 0 2px var(--teal);
+}
+
+
+/* Botón flotante "+" para añadir una comida, en todas las pantallas */
+.meal-fab {
+  display: grid;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 49;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #041315;
+  box-shadow: 0 10px 26px rgba(38, 214, 193, 0.35);
+  cursor: pointer;
+}
+
+/* En celular, el botón queda encima de la barra inferior */
+@media (max-width: 700px) {
+  .meal-fab {
+    right: 20px;
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 78px);
+  }
+}
+
+/* Pantalla "Captura tu comida" (/captura), abierta con el botón + */
+.capture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 22px;
+}
+
+.capture-card {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 22px 14px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  cursor: pointer;
+}
+
+.capture-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.capture-card strong {
+  font-size: 15px;
+}
+
+.capture-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.capture-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--teal);
+}
+
+/* Formulario "Describir con IA" en la pantalla de captura */
+.describe-form {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.describe-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.describe-form textarea {
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.describe-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Campo para escribir el número del código de barras */
+.barcode-form input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: 0.04em;
+}
+
+/* Las tarjetas de captura también pueden ser enlaces */
+a.capture-card {
+  text-decoration: none;
+}
+
+/* Página dedicada de escaneo de código de barras */
+.barcode-page-form {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.barcode-page-form .form-primary {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.barcode-page-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Escáner de código de barras en vivo */
+.barcode-scanner {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 20px;
+  background: #000;
+}
+
+.barcode-scanner video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.barcode-frame {
+  position: relative;
+  width: min(80vw, 320px);
+  height: 170px;
+  border: 3px solid var(--teal);
+  border-radius: 16px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.45);
+}
+
+.barcode-scanner-hint,
+.barcode-scanner .form-cancel {
+  position: relative;
+}
+
+.barcode-scanner-hint {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.barcode-scanner .form-cancel {
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* Los días de la tira de inicio son enlaces a /calendario */
+a.week-strip-day {
+  text-decoration: none;
+}
+
+/* Pantalla Coach: KPI y recomendaciones de Claude */
+.coach-panel {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 22px;
+}
+
+.coach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.coach-actions .form-primary {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.coach-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.coach-kpis > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.coach-kpis span,
+.coach-kpis small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.coach-kpis strong {
+  font-size: 20px;
+}
+
+.coach-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.coach-card h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.coach-card p,
+.coach-card li {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.coach-card ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* El botón central de la barra móvil ahora lleva a Coach */
+.bottom-nav a.bottom-camera,
+.bottom-nav a.bottom-camera.active {
+  color: white;
+  text-decoration: none;
+}
+
+/* Modo oscuro: el botón central de Coach conserva el icono blanco */
+html[data-theme="dark"] .bottom-nav a.bottom-camera,
+html[data-theme="dark"] .bottom-nav a.bottom-camera.active,
+html[data-theme="dark"] .bottom-nav a.bottom-camera:hover {
+  color: white;
+}
+
+/* Enlace "Ver progreso" en la pantalla Coach */
+.coach-progress-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Mensajes de estado en la pantalla Coach */
+.coach-hint,
+.coach-error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.coach-hint {
+  color: var(--muted);
+}
+
+.coach-error {
+  color: var(--coral);
+  font-weight: 600;
+}
+
+/* Preloader mientras Claude analiza el progreso */
+.coach-loader {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.coach-loader strong {
+  display: block;
+  font-size: 15px;
+}
+
+.coach-loader p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.coach-spinner {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--surface-soft);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: coach-spin 0.9s linear infinite;
+}
+
+@keyframes coach-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+/* Modo guiado de la sesión: un ejercicio a la vez y cronómetro de descanso */
+.rest-timer {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 26px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.rest-timer > span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rest-timer > strong {
+  color: var(--teal);
+  font-size: 48px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.rest-timer-actions,
+.guided-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+
+.rest-timer-actions button,
+.guided-actions button {
+  display: inline-flex;
+  min-height: 44px;
+  flex: 1 1 140px;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Quitar la marca de un ejercicio solo en pantalla, para probar el descanso */
+.guided-unmark {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Preloader del Coach: el bulldog levantando la barra */
+.coach-preloader-img {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  animation: coach-bounce 1s ease-in-out infinite;
+}
+
+@keyframes coach-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-preloader-img {
+    animation: none;
+  }
+}
+
+/* Preloader a pantalla completa mientras Claude analiza el progreso */
+.coach-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  gap: 18px;
+  align-content: center;
+  justify-items: center;
+  padding: 24px;
+  background: var(--canvas);
+  text-align: center;
+}
+
+.coach-fullscreen .coach-preloader-img {
+  width: min(55vw, 220px);
+  height: auto;
+}
+
+.coach-fullscreen strong {
+  font-size: 20px;
+}
+
+.coach-fullscreen p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Añadir ejercicio con IA dentro del formulario de rutina */
+.custom-exercise-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.custom-exercise-row .custom-exercise-toggle {
+  width: 100%;
+  margin: 0;
+}
+
+.ia-exercise-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.ia-exercise-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.ia-exercise-form textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.ia-exercise-photo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.ia-photo-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px dashed var(--teal);
+  border-radius: 12px;
+  color: var(--teal);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ia-photo-button input {
+  display: none;
+}
+
+.ia-photo-clear,
+.ia-exercise-search,
+.ia-exercise-result button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ia-photo-clear {
+  background: transparent;
+  color: var(--muted);
+}
+
+.ia-exercise-search,
+.ia-exercise-result button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  background: var(--teal);
+  color: #041315;
+}
+
+.ia-exercise-search:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ia-exercise-error {
+  margin: 0;
+  color: var(--coral);
+  font-weight: 600;
+}
+
+.ia-exercise-result {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--teal);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.ia-exercise-result p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ia-exercise-result .ia-exercise-tip {
+  color: var(--muted);
+}
+
+/* Última vez y sugerencia de peso en el modo guiado */
+.guided-last {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.guided-last p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.guided-last strong {
+  color: var(--ink);
+}
+
+.guided-suggestion {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+.guided-suggestion.up {
+  color: var(--teal) !important;
+}
+
+/* Selector de la rutina de hoy (orden del ciclo) */
+.cycle-picker {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cycle-picker select {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font: inherit;
+}
+
+/* Botón "Crear rutina": color de la app y el icono centrado */
+.routine-create-button {
+  background: var(--teal);
+  color: #041315;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Icono "+" centrado dentro del botón Crear rutina */
+.routine-create-button {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  gap: 0;
+}
+
+.routine-create-button svg {
+  display: block;
+  margin: 0;
+  flex: 0 0 auto;
+}
