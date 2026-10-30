@@ -34,10 +34,6 @@ BullTrack es una app personal para llevar el gimnasio y la alimentación en un s
 | --- | --- | --- |
 | ![Coach](img/movil-coach.png) | ![Nutrición](img/movil-nutricion.png) | ![Progreso](img/movil-progreso.png) |
 
-| Calendario |
-| --- |
-| ![Calendario](img/movil-calendario.png) |
-
 ![Inicio en escritorio](img/escritorio-inicio.png)
 
 ## Arquitectura
