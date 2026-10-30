@@ -4,25 +4,22 @@
 
 # BullTrack
 
-**Tu espacio fitness: entrena, registra tu nutrición y mira tu progreso.**
+**Entrena, registra tu nutrición y mira tu progreso.**
 
 Next.js · React · SQLite · PWA · Claude Code
 
 </div>
 
-BullTrack es una app personal para llevar el gimnasio y la alimentación en un solo lugar. Se usa desde el PC y el celular, y se puede instalar como app.
+BullTrack es una app personal para el gimnasio y la alimentación. Se usa desde la PC y el celular, y se puede instalar como app.
 
 ## Funciones
 
-- **Rutinas**: crea rutinas por día de la semana, con series, repeticiones, peso y descanso. Cada día muestra la rutina de ese día de la semana. Añade ejercicios a mano o con IA (texto o foto).
-- **Modo guiado**: un ejercicio a la vez, cronómetro de descanso, peso base + extra, notas por ejercicio y la última vez con una sugerencia de peso.
-- **Captura de comida (+)**: tomar foto o elegir de la galería, describir con IA, escanear código de barras (cámara o número) y cargar favoritos.
-- **Nutrición**: registro manual de comidas y macronutrientes, con estimación desde foto o descripción usando Claude Code.
-- **Coach**: análisis de los últimos 30 días con Claude (indicadores de entrenamiento, nutrición, peso, sueño y agua).
-- **Progreso**: gráficos de proteína semanal, 1RM estimado por ejercicio y peso con tendencia.
-- **Descanso y hábitos**: sueño, agua, racha de días de gimnasio y calendario.
-- **Celular y avisos**: se instala como PWA y envía recordatorios de entrenamiento, sueño y cena.
-- **Arquitectura**: diagramas de cómo se conecta todo en [ARQUITECTURA.md](ARQUITECTURA.md).
+- **Entrenamiento:** rutinas por día de la semana, modo guiado con descanso por serie y registro de series, repeticiones y peso.
+- **Nutrición:** comidas y macros, con estimación desde foto o descripción usando Claude Code.
+- **Sueño, peso y agua:** registro diario, con variación de peso y horas dormidas calculadas.
+- **Progreso:** gráficos de proteína, fuerza estimada por ejercicio y peso.
+- **Coach y plan:** análisis de tus últimos 30 días con Claude, y un plan para ganar músculo con tus datos.
+- **Avisos:** recordatorios y análisis de tu semana que llegan al celular.
 
 ## Capturas
 
@@ -38,7 +35,7 @@ BullTrack es una app personal para llevar el gimnasio y la alimentación en un s
 
 ## Arquitectura
 
-Cómo se conectan las piezas de BullTrack. Los diagramas completos (flujos, base de datos y pantallas) están en [ARQUITECTURA.md](ARQUITECTURA.md).
+Cómo se conectan las piezas. Más detalle en [ARQUITECTURA.md](ARQUITECTURA.md).
 
 ```mermaid
 flowchart TD
@@ -78,113 +75,44 @@ flowchart TD
 ## Inicio rápido
 
 1. Instala las dependencias: `npm install`.
-2. Crea `.env.local` a partir de `.env.example` y completa los valores (ver la sección de seguridad).
+2. Crea `.env.local` copiando `.env.example` y completa los valores.
 3. Desarrollo: `npm run dev` y abre [http://localhost:3000](http://localhost:3000).
-4. Producción (la que se usa con el celular): `npm run produccion`, que compila y arranca en el puerto 4317.
+4. Producción (la que usa el celular): `npm run produccion`, en el puerto 4317.
 
-## Seguridad de acceso
+## Acceso y configuración
 
-La app pide usuario y contraseña en un formulario de inicio de sesión (`/acceso`). Al entrar, el navegador guarda una cookie firmada que dura 30 días. Las rutas de API sin sesión responden 401.
+- Pide usuario y contraseña en `/acceso`. La sesión dura 30 días.
+- En `.env.local` van el usuario, la contraseña, el secreto de sesión y las claves VAPID (para los avisos). Si falta alguno, el servidor responde 503. No subas este archivo.
+- `CLAUDE_CLI_PATH`: ruta al ejecutable de Claude Code, si la detección automática falla.
+- `PULSE_ORIGEN_PUBLICO`: la dirección HTTPS de Tailscale, para usar la app desde el celular.
 
-Antes de iniciar el servidor, crea `.env.local` a partir de `.env.example` y completa todos los valores: usuario, contraseña, secreto de sesión y claves VAPID para las notificaciones. Si falta alguno de ellos, el servidor responde 503. No subas `.env.local` ni compartas sus valores.
+## Tailscale
 
-Para acceder desde otro dispositivo, publica el servidor solo detrás de HTTPS y de una red privada de confianza (por ejemplo, Tailscale Serve). Las solicitudes de escritura desde navegadores también se limitan al mismo origen.
+Tailscale es una red privada entre tus dispositivos. Con **Tailscale Serve** la app queda accesible solo para tus equipos, con HTTPS, sin exponerla a internet.
 
-## PWA
-
-La versión de producción incluye manifiesto instalable y service worker. Ejecuta `npm run build` y luego `npm run start`; durante `npm run dev` el service worker queda desactivado. Las rutas `/api/*` siempre van a la red y no se guardan en caché. Para instalar en un teléfono desde otro dispositivo, usa una conexión HTTPS de confianza.
-
-La función de registro desde foto envía imágenes JPEG, PNG o WebP de hasta 8 MB al Claude CLI local. Requiere Claude Code actualizado (2.1.248 o posterior) y autenticado en la misma cuenta de Windows que ejecuta Next.js. En Windows, si la detección automática no encuentra la instalación global, configura `CLAUDE_CLI_ENTRY` en `.env.local` con la ruta completa al archivo `cli.js`. La estimación se revisa en el formulario antes de guardarse; el archivo temporal se elimina al terminar.
-
-Nota de privacidad: Claude CLI se ejecuta en este equipo, pero envía la imagen al servicio de Anthropic para el análisis. No se guarda un historial de sesión y la copia temporal local se elimina al terminar.
-
-## Comandos del servidor (uso diario)
-
-Ejecútalos en PowerShell, dentro de la carpeta `mi-gym`.
-
-Encender la app (compila y arranca en el puerto 4317, el que publica Tailscale):
+Comandos útiles (PowerShell):
 
 ```powershell
-npm run produccion
+& "C:\Program Files\Tailscale\tailscale.exe" status   # ver si PC y celular están conectados
+& "C:\Program Files\Tailscale\tailscale.exe" down     # desconectar
+& "C:\Program Files\Tailscale\tailscale.exe" up       # volver a conectar
 ```
 
-Desconectar Tailscale (para probar que la app deja de cargar en el celular):
+Desde el celular abre `https://TU-PC.TU-RED.ts.net`.
 
-```powershell
-& "C:\Program Files\Tailscale\tailscale.exe" down
-```
+## Tareas automáticas (Windows)
 
-Volver a conectar Tailscale:
+- **Pulse servidor:** arranca la app al iniciar sesión. Ejecuta `scripts/iniciar-pulse.ps1` y guarda su salida en `pulse-servidor.log`.
+- **Pulse avisos:** cada hora ejecuta `scripts/avisos.mjs`, que envía los recordatorios y análisis push según tus registros. Guarda su salida en `avisos.log`. No usa IA ni gasta tokens.
 
-```powershell
-& "C:\Program Files\Tailscale\tailscale.exe" up
-```
+Para probar los avisos sin enviarlos: `node scripts/avisos.mjs --simular`.
 
-Ver el estado de Tailscale (PC y celular conectados):
+## Uso diario
 
-```powershell
-& "C:\Program Files\Tailscale\tailscale.exe" status
-```
+- Después de cambiar código, vuelve a ejecutar `npm run produccion`. En producción los cambios no se ven hasta compilar de nuevo.
+- Si cambias el puerto, actualízalo en `package.json`, en `scripts/iniciar-pulse.ps1` y en Tailscale Serve.
 
-Dirección para abrir la app desde el celular:
+## Notas
 
-```
-https://TU-PC.TU-RED.ts.net
-```
-
-Si cambias código, vuelve a ejecutar `npm run produccion`: en producción los cambios no se ven hasta compilar de nuevo.
-
-## Puerto y arranque automático
-
-- **Puerto de producción: 4317** (antes 3003). Lo usa `npm run produccion` y lo publica Tailscale Serve. Si cambias el puerto, cámbialo en `package.json`, en `scripts/iniciar-pulse.ps1` y con `tailscale serve --bg http://localhost:NUEVO_PUERTO`.
-- **Arranque al iniciar sesión**: el script `scripts/iniciar-pulse.ps1` ejecuta `npm run produccion` en segundo plano y guarda su salida en `pulse-servidor.log`. Para que se ejecute solo, regístralo en el Programador de tareas como tarea "Pulse servidor" con disparador "Al iniciar sesión" (ver los comandos de PowerShell abajo).
-
-Crear la tarea (PowerShell, una sola vez):
-
-```powershell
-$accion = New-ScheduledTaskAction -Execute "powershell.exe" -Argument '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\Users\Gamer\Desktop\Semestral\Proyectos_web\mi-gym\scripts\iniciar-pulse.ps1"'
-$disparador = New-ScheduledTaskTrigger -AtLogOn
-Register-ScheduledTask -TaskName "Pulse servidor" -Action $accion -Trigger $disparador -Description "Arranca Pulse (puerto 4317) al iniciar sesión." -Force
-```
-
-Iniciarla sin reiniciar el PC:
-
-```powershell
-Start-ScheduledTask -TaskName "Pulse servidor"
-```
-
-## Análisis de fotos de comida con Claude Code
-
-La pantalla de Nutrición permite tomar una foto de una comida o elegirla de la galería. La app la envía al servidor, que usa Claude Code instalado en este equipo para estimar nombre, tipo de comida, kcal, proteína, carbohidratos y grasas. El resultado aparece en el formulario para que lo revises antes de guardarlo.
-
-**Cómo está conectado**
-
-1. El navegador envía la imagen a `POST /api/foto` (JPEG, PNG o WebP, hasta 8 MB).
-2. La ruta valida el tipo real del archivo por sus bytes, lo guarda temporalmente en `uploads/` y lo borra al terminar.
-3. Ejecuta el CLI de Claude Code con permisos mínimos: `--permission-mode plan`, `--tools Read` (solo lectura), `--max-turns 4` y `--restricted`. El directorio de trabajo es `uploads/`.
-4. Lee la respuesta JSON, valida que los valores sean números finitos dentro de rango y devuelve la estimación al formulario.
-
-**Configuración necesaria**
-
-- Claude Code instalado y con sesión iniciada en la misma cuenta de Windows que ejecuta el servidor.
-- En `.env.local`, `CLAUDE_CLI_PATH` con la ruta al ejecutable real (`...\@anthropic-ai\claude-code\bin\claude.exe`). Sin esta variable, la ruta puede tomar una carpeta de `node_modules\.bin` que no contiene el CLI.
-- `PULSE_ORIGEN_PUBLICO` con la dirección HTTPS de Tailscale, para que el servidor acepte las peticiones que llegan desde el celular.
-
-**Solución aplicada a los fallos encontrados**
-
-- **Ruta del CLI incorrecta**: la búsqueda tomaba `node_modules\.bin` del `PATH` y no comprobaba que el archivo existiera. Se fijó `CLAUDE_CLI_PATH` al ejecutable real.
-- **Sin resultado final**: con `--max-turns 1`, el modelo se detenía al pedir leer la imagen y nunca devolvía la estimación. Ahora son 4 turnos.
-- **Error de origen (403) en HTTPS**: el navegador envía `Origin` con la dirección de Tailscale, pero el servidor solo aceptaba su host local. Se agregó `PULSE_ORIGEN_PUBLICO`.
-- **Mensaje genérico "No se pudo completar la operación"**: aparecía cuando la respuesta no era JSON, como el 403 en texto plano. Así se identificó el origen del problema.
-- **Campo de archivo solo con cámara**: se quitó el atributo `capture` para permitir cámara y galería.
-- **Espera sin indicación**: mientras se analiza, aparece un aviso de carga que se quita al terminar.
-
-**Idea de diseño**
-
-La app no llama a la API de Anthropic directamente. Usa Claude Code de la misma PC, para que el análisis use la cuenta y los permisos del usuario y para no guardar claves de API en el proyecto. La imagen se envía al servicio de Anthropic para el análisis, y no se guarda historial de sesión.
-
-**Limitaciones conocidas**
-
-- Depende de que el PC esté encendido y con Claude Code autenticado.
-- Si la imagen no es comida, el modelo puede devolver valores fuera de rango, y la app lo rechaza.
-- Cada análisis tarda entre 10 y 60 segundos. Si la conexión se corta en ese tiempo, la petición falla.
+- La estimación de comidas por foto usa Claude Code instalado en este equipo, con la cuenta de Windows que ejecuta el servidor. La imagen se envía al servicio de Anthropic para el análisis, y la copia local se borra al terminar.
+- Depende de que el PC esté encendido. El análisis de una foto tarda entre 10 y 60 segundos.
